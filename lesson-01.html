@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 1 课 · 向量：一条数据长什么样</title>
+<style>
+  :root{
+    --bg:#f7f5ef; --card:#fffdf8; --ink:#16233a; --muted:#5b6b7f;
+    --line:#e3ded2; --line2:#d2cbbb;
+    --teal:#0d6f6a; --blue:#1d4ed8; --amber:#a16207; --rose:#9f1239; --violet:#5b21b6;
+    --mono:'JetBrains Mono','DejaVu Sans Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);font-family:'Noto Sans CJK SC','Source Han Sans SC','Microsoft YaHei',sans-serif;line-height:1.78;font-size:16px}
+  .wrap{max-width:820px;margin:0 auto;padding:0 22px 90px}
+  a{color:var(--blue)}
+
+  .topnav{display:flex;justify-content:space-between;font-size:13px;padding:18px 0 0;color:var(--muted)}
+  .topnav a{text-decoration:none}
+
+  header{padding:26px 0 26px;border-bottom:1px solid var(--line2);margin-bottom:34px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .tag{font-size:12px;padding:3px 10px;border-radius:999px;background:#e9f0ef;color:var(--teal);font-weight:700;letter-spacing:.04em}
+  .tag.b{background:#e8ecfb;color:var(--blue)}
+  .tag.c{background:#f6eadd;color:var(--amber)}
+  h1{font-size:clamp(26px,4.6vw,36px);line-height:1.25;font-weight:800;letter-spacing:.01em}
+  .sub{color:var(--muted);font-size:16px;margin-top:8px}
+  .sub b{color:var(--ink)}
+
+  .goal{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:0 12px 12px 0;padding:16px 20px;margin-top:20px;font-size:14.5px}
+  .goal b{color:var(--teal)}
+
+  section{margin-bottom:44px}
+  h2{font-size:13px;letter-spacing:.16em;color:var(--muted);font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+  h2 .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;letter-spacing:0;flex:none}
+  h2::after{content:"";flex:1;height:1px;background:var(--line)}
+  h3{font-size:19px;font-weight:800;margin:18px 0 8px}
+  p{color:#33415a;margin-bottom:12px}
+  p b{color:var(--ink)}
+  .big{font-size:18.5px;line-height:1.85;color:var(--ink)}
+  em{font-style:normal;color:var(--teal);font-weight:700}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:16px 0}
+  .quote{background:#fbf8f0;border:1px dashed var(--line2);border-radius:12px;padding:16px 20px;font-size:15px;color:#4a5468;margin:16px 0}
+  .quote b{color:var(--amber)}
+
+  /* 交互图 */
+  .fig{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 16px 10px;margin:18px 0}
+  .fig svg{display:block;width:100%;max-width:560px;height:auto;margin:0 auto}
+  .fig .cap{font-size:12.5px;color:var(--muted);text-align:center;padding:6px 0 8px}
+  .ctrl{display:flex;align-items:center;gap:14px;padding:8px 6px 4px;flex-wrap:wrap}
+  .ctrl label{font-size:13.5px;color:#3c4a5e;font-weight:600;white-space:nowrap}
+  input[type=range]{flex:1;min-width:150px;accent-color:#1d4ed8}
+  .readout{display:flex;gap:8px;flex-wrap:wrap;padding:0 6px 12px;font-size:13px}
+  .pill{font-family:var(--mono);background:#eef2f7;color:#1f3a68;padding:4px 10px;border-radius:7px}
+  .pill.warn{background:#fdecec;color:#9f1239}
+  .pill.ok{background:#e9f0ef;color:#0d6f6a}
+
+  /* 公式 */
+  .math{font-family:'Times New Roman','DejaVu Serif',serif;font-size:17.5px}
+  .eq{display:block;text-align:center;background:#f3f1e9;border-radius:10px;padding:14px 12px;margin:14px 0;font-family:'Times New Roman','DejaVu Serif',serif;font-size:19px;letter-spacing:.02em;overflow-x:auto;white-space:nowrap}
+
+  table{width:100%;border-collapse:collapse;font-size:14.5px;margin:14px 0;background:var(--card)}
+  th,td{padding:11px 13px;border:1px solid var(--line);text-align:left;vertical-align:top;line-height:1.6}
+  th{background:#efece3;font-size:12.5px;letter-spacing:.05em;color:#3c4a5e;font-weight:700}
+  td:first-child{white-space:nowrap;font-weight:700;color:var(--teal)}
+  .mono{font-family:var(--mono);font-size:13.5px}
+
+  pre{background:#152034;color:#e6edf7;border-radius:12px;padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;line-height:1.65;margin:14px 0}
+  pre .c{color:#7d8fa8}
+  pre .k{color:#8fd3ff}
+  pre .s{color:#ffd479}
+  code{font-family:var(--mono);font-size:13.5px;background:#eef2f7;padding:1px 6px;border-radius:5px;color:#1f3a68}
+
+  /* 练习 */
+  .ex{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+  .ex .q{font-weight:700;color:var(--ink);font-size:15.5px;margin-bottom:6px;display:flex;gap:10px}
+  .ex .q .qn{color:var(--blue);font-family:var(--mono);flex:none}
+  .ex .hint{font-size:13.5px;color:var(--muted)}
+  details{margin-top:10px;border-top:1px dashed var(--line2);padding-top:10px}
+  summary{cursor:pointer;font-size:13.5px;font-weight:700;color:var(--teal);list-style:none;user-select:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸ ";display:inline-block;transition:transform .15s}
+  details[open] summary::before{transform:rotate(90deg)}
+  details .ans{margin-top:10px;font-size:14.5px;color:#3a475c}
+  details .ans .step{color:var(--muted);font-size:13.5px;display:block;margin-top:4px}
+
+  /* 明日问题 */
+  .next{background:var(--ink);color:#f4f1e8;border-radius:16px;padding:26px 26px}
+  .next h3{color:#fff;font-size:19px;margin:0 0 8px}
+  .next p{color:#c3ccdb;font-size:15px;margin:0}
+  .next b{color:#ffe7a8}
+  .next .q{color:#ffe7a8;font-style:normal;font-weight:700}
+
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:46px;padding-top:20px;border-top:1px solid var(--line2);font-size:14px}
+
+  /* 复习卡 */
+  .recall{background:#f0f5f4;border:1px solid #d3e3df;border-radius:12px;padding:16px 20px;font-size:14.5px}
+  .recall b{color:var(--teal)}
+  .recall ol{margin:8px 0 0 20px}
+  .recall li{margin-bottom:5px;color:#3a475c}
+
+  @media (max-width:640px){
+    body{font-size:15px}
+    .wrap{padding:0 16px 70px}
+    header{padding-top:18px}
+    .eq{font-size:16px;whitespace:normal;white-space:normal}
+    table{font-size:13.5px}
+    th,td{padding:9px 10px}
+    td:first-child{white-space:normal}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topnav">
+    <a href="index.html">← 路线图</a>
+    <span>第 1 课 / 阶段 1 · 空间</span>
+  </div>
+
+  <header>
+    <div class="meta">
+      <span class="tag">第 1 课</span>
+      <span class="tag b">线性代数 · 向量</span>
+      <span class="tag c">50 分钟 · 可拆两天</span>
+    </div>
+    <h1>向量：一条数据长什么样</h1>
+    <p class="sub">这一课只解决一件事——<b>「这两个东西有多像」怎么用数学回答</b>。它是推荐、搜索、人脸识别的共同起点。</p>
+    <div class="goal">
+      <b>学完你能：</b>把一条数据写成向量；解释内积就是「投影」；说出余弦相似度为什么比欧氏距离更适合做「像不像」的判据；用 numpy 算出来。
+    </div>
+  </header>
+
+  <section>
+    <h2><span class="n">1</span>先从一个真实问题开始</h2>
+    <p class="big">你在网易云音乐里点开一首歌，它下面推荐了五首。它怎么知道哪五首「像」？</p>
+    <p>最朴素的做法是给人打分：一首歌的「节奏快慢」「情绪明亮度」「人声多少」各打 1–10 分。于是每首歌变成了三个数字：</p>
+    <div class="eq">晴天 = (3, 7, 8)　　Shape of You = (8, 6, 9)　　大悲咒 = (1, 2, 9)</div>
+    <p>有了数字，问题就变成：<b>怎么比较三组数字的「像」？</b></p>
+    <p>这里你其实已经做完了最重要的一步——<em>把世界翻译成数字</em>。向量，就是这组数字的名字。</p>
+    <div class="quote">
+      <b>一句定义，但请先别背：</b>向量就是一串有序的数，每个位置叫一个<b>维度</b>，每个维度是一个<b>特征</b>。一条数据 = 一个向量。
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span>直觉：向量是空间里的一支箭</h2>
+    <p>三个数字听不出「像不像」，但如果你把它当成空间里的一个<b>点</b>——从原点出发，用一支箭指过去——事情立刻变直观。</p>
+    <p>两首歌「像」，就是两支箭<b>朝同一个方向</b>。下面这张图你可以拖：左边的箭头固定不动，拖动滑块改变「另一首歌」的方向。</p>
+
+    <div class="fig">
+      <svg id="fig" viewBox="0 0 420 280" role="img" aria-label="两个向量的夹角与投影">
+        <defs>
+          <marker id="ah-a" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+            <path d="M0,0 L7,3.2 L0,6.4 z" fill="#0d6f6a"/>
+          </marker>
+          <marker id="ah-b" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+            <path d="M0,0 L7,3.2 L0,6.4 z" fill="#1d4ed8"/>
+          </marker>
+        </defs>
+        <g id="grid" stroke="#e8e3d6" stroke-width="1"></g>
+        <line x1="160" y1="16" x2="160" y2="256" stroke="#c9c2b2" stroke-width="1.5"/>
+        <line x1="16" y1="240" x2="404" y2="240" stroke="#c9c2b2" stroke-width="1.5"/>
+        <line id="proj" x1="160" y1="240" x2="250" y2="240" stroke="#9f1239" stroke-width="2" stroke-dasharray="5 4"/>
+        <line id="projdash" x1="250" y1="240" x2="250" y2="240" stroke="#9f1239" stroke-width="1.3" stroke-dasharray="3 4" opacity=".75"/>
+        <path id="arc" d="" fill="none" stroke="#a16207" stroke-width="2"/>
+        <line id="va" x1="160" y1="240" x2="260" y2="240" stroke="#0d6f6a" stroke-width="3" marker-end="url(#ah-a)"/>
+        <line id="vb" x1="160" y1="240" x2="310" y2="240" stroke="#1d4ed8" stroke-width="3" marker-end="url(#ah-b)"/>
+        <circle cx="160" cy="240" r="3.5" fill="#16233a"/>
+        <text id="la" x="266" y="236" font-size="14" fill="#0d6f6a" font-weight="700" font-family="Times New Roman, serif">a</text>
+        <text id="lb" x="316" y="236" font-size="14" fill="#1d4ed8" font-weight="700" font-family="Times New Roman, serif">b</text>
+        <text id="lth" x="196" y="222" font-size="13" fill="#a16207" font-weight="700" font-family="Times New Roman, serif" style="paint-order:stroke;stroke:#fffdf8;stroke-width:3.5;stroke-linejoin:round">θ</text>
+      </svg>
+      <div class="ctrl">
+        <label for="ang">b 的方向 θ</label>
+        <input id="ang" type="range" min="0" max="180" value="40" step="1">
+      </div>
+      <div class="readout">
+        <span class="pill" id="r-ang">θ = 40°</span>
+        <span class="pill" id="r-cos">cos θ = 0.766</span>
+        <span class="pill" id="r-len">投影 = 1.53</span>
+        <span class="pill ok" id="r-tag">比较像</span>
+      </div>
+      <div class="cap">a 是「数据 A」的方向与长度；b 是「数据 B」。虚线是 a 在 b 方向上的<b>影子（投影）</b>——投影为正时红色，为负时反向、变紫。</div>
+    </div>
+
+    <h3>看懂这张图，你就懂了内积</h3>
+    <p>把 a 朝 b 的方向「照」过去，会在地上留下一个影子。影子的长度是：</p>
+    <div class="eq">影子长度 = |a| · cos θ</div>
+    <p>而 b 的长度乘以这个影子，就是内积：</p>
+    <div class="eq">a · b = |a| · |b| · cos θ</div>
+    <p>换个说法：<b>内积在衡量「a 有多少成分落在 b 的方向上」</b>。两根箭头几乎重合，内积最大；相互垂直，内积为 0——一点关系都没有；方向相反，内积为负。</p>
+    <p>这也解释了内积为什么是「对应位置相乘再相加」：只有同方向的分量才会互相「对上」，对不上的就浪费了。</p>
+    <div class="eq">a · b = a<sub>1</sub>b<sub>1</sub> + a<sub>2</sub>b<sub>2</sub> + … + a<sub>n</sub>b<sub>n</sub></div>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span>内积在物理世界里到底算什么</h2>
+    <p class="big">先记住一句话，下面三件事都在重复它：</p>
+    <div class="quote" style="font-size:15.5px">
+      <b>内积 = 「一个东西在另一个东西的方向上有多少」×「另一个东西有多大」。</b>
+    </div>
+
+    <h3>场景一：斜着推箱子 —— 做功</h3>
+    <p>你推一个箱子沿地面滑了 5 米，用了 10 牛的力，但手是斜向上的，和地面成 60°。物理课本说做功：</p>
+    <div class="eq">W = 10 × 5 × cos 60° = 25 焦</div>
+    <p>为什么不是 50 焦？因为你有一半的力在<b>提</b>箱子，只有 <span class="math">F·cos θ = 5 牛</span> 在<b>推</b>它往前走。垂直方向的分力不参与位移，一点功都不做。</p>
+    <div class="fig">
+      <svg viewBox="0 0 420 250" role="img" aria-label="斜向上的力沿位移方向做功">
+        <defs>
+          <marker id="ah-f" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 z" fill="#b91c1c"/></marker>
+          <marker id="ah-fx" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6.5,3 L0,6 z" fill="#a16207"/></marker>
+          <marker id="ah-s" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 z" fill="#0d6f6a"/></marker>
+        </defs>
+        <line x1="20" y1="210" x2="400" y2="210" stroke="#c9c2b2" stroke-width="1.5"/>
+        <rect x="40" y="176" width="44" height="34" rx="3" fill="#efe6d2" stroke="#a16207" stroke-width="1.5"/>
+        <line x1="88" y1="210" x2="350" y2="210" stroke="#0d6f6a" stroke-width="3" marker-end="url(#ah-s)"/>
+        <text x="358" y="205" font-size="13" fill="#0d6f6a" font-weight="700" font-family="Times New Roman, serif">s</text>
+        <line x1="84" y1="192" x2="151.7" y2="192" stroke="#a16207" stroke-width="2.5" marker-end="url(#ah-fx)"/>
+        <line x1="84" y1="192" x2="84" y2="95.3" stroke="#a16207" stroke-width="2.5" marker-end="url(#ah-fx)"/>
+        <line x1="151.7" y1="192" x2="151.7" y2="95.3" stroke="#cbbd9e" stroke-width="1.2" stroke-dasharray="4 4"/>
+        <line x1="84" y1="95.3" x2="151.7" y2="95.3" stroke="#cbbd9e" stroke-width="1.2" stroke-dasharray="4 4"/>
+        <line x1="84" y1="192" x2="151.7" y2="95.3" stroke="#b91c1c" stroke-width="3" marker-end="url(#ah-f)"/>
+        <text x="159" y="92" font-size="14" fill="#b91c1c" font-weight="700" font-family="Times New Roman, serif">F</text>
+        <text x="140" y="186" font-size="11" fill="#a16207" text-anchor="middle" font-family="Noto Sans CJK SC, sans-serif" style="paint-order:stroke;stroke:#fffdf8;stroke-width:3;stroke-linejoin:round">F·cosθ</text>
+        <text x="80" y="134" font-size="11" fill="#a16207" text-anchor="end" font-family="Noto Sans CJK SC, sans-serif" style="paint-order:stroke;stroke:#fffdf8;stroke-width:3;stroke-linejoin:round">F·sinθ</text>
+        <path d="M 114 192 A 30 30 0 0 0 101.2 167.4" fill="none" stroke="#a16207" stroke-width="1.8"/>
+        <text x="106" y="184" font-size="12" fill="#a16207" font-family="Times New Roman, serif">θ</text>
+      </svg>
+      <div class="cap">斜着推箱子：只有沿位移方向的分量 <b>F·cosθ</b> 在「推」，垂直分量只在「提」。</div>
+    </div>
+    <p>物理课本写的就是内积：</p>
+    <div class="eq">W = F · s</div>
+    <p>这就给了「垂直时内积为 0」一个扎扎实实的含义：<em>两个量没有共享的方向，它们之间不发生任何耦合</em>——你提着箱子走，提的力不帮你前进。</p>
+
+    <h3>场景二：算总成绩 —— 加权求和</h3>
+    <p>数学 90 分、英语 60 分；权重分别是 0.7 和 0.3。总分是：</p>
+    <div class="eq">0.7 × 90 + 0.3 × 60 = 81</div>
+    <p>注意一件小事：0.7 只能乘数学，管不到英语。每一维是一个<b>独立通道</b>，只有同一通道里的数才互相作用。这就是「逐项相乘再相加」这个定义的来源——它不是数学家拍脑袋规定的，而是「每一维各算各的，最后汇总」这件事的写法。</p>
+    <p>把权重写成向量 (0.7, 0.3)，成绩写成向量 (90, 60)，总分就是它们的点积。所以：<b>内积 = 加权求和</b>。</p>
+
+    <h3>场景三：雷达找目标 —— 匹配</h3>
+    <p>雷达发出一个已知波形 s，接收到的回波 r 里混着噪声。怎么判断回波里有没有目标？把 r 和 s 做内积：</p>
+    <p>有目标时 <span class="math">r ≈ αs + 噪声</span>，r·s 很大；只有噪声时，r·s 在 0 附近随机晃。这就是「匹配滤波」——<b>内积越大，两个信号越对得上</b>。</p>
+    <p>这条线索一直通到应用层：神经元 = 权重·输入 + 偏置，权重向量的方向就是它最敏感的模式；Transformer 里的 attention 分数，正是 query 和 key 的内积。</p>
+
+    <h3>四个视角，同一件事</h3>
+    <table>
+      <tr><th style="width:96px">视角</th><th>内积在算什么</th></tr>
+      <tr><td>几何</td><td>a 在 b 上的投影长度 × b 的长度</td></tr>
+      <tr><td>物理</td><td>力沿位移方向做的功</td></tr>
+      <tr><td>代数</td><td>逐维相乘再相加 = 加权求和</td></tr>
+      <tr><td>工程</td><td>两个信号的匹配 / 相关程度</td></tr>
+    </table>
+    <p>真正该记住的不是公式，而是这句：<em>内积在度量「两个东西在彼此方向上的交集，乘以各自有多大」</em>。</p>
+
+    <h3>一个反例：内积大 ≠ 相似</h3>
+    <p>(100, 0) 和 (1, 0) 的内积是 100，很大；但这两个向量一个天一个地，长度差了 99。</p>
+    <p>内积大只说明「它们在同一个方向上都有分量」。要判断「像不像」，必须先去掉长度：除以 |a||b|，就得到余弦——这正是下一节要讲的事。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">4</span>为什么是余弦，不是距离</h2>
+    <p>你可能会问：直接量两个点的直线距离不行吗？行，但有个坑。</p>
+    <p>设想两个用户看电影：</p>
+    <div class="table, card">
+      <table>
+        <tr><th>用户</th><th>科幻片</th><th>爱情片</th><th>看片量</th></tr>
+        <tr><td>A</td><td>1 部</td><td>1 部</td><td>2</td></tr>
+        <tr><td>B</td><td>10 部</td><td>10 部</td><td>20</td></tr>
+      </table>
+    </div>
+    <p>两人的<b>口味比例完全一样</b>（科幻与爱情各占一半），只是 B 看得多。可是欧氏距离算出来是：</p>
+    <div class="eq">|A − B| = √(9² + 9²) ≈ 12.7</div>
+    <p>距离很大，算法会判定「这两个人不像」。可他们的偏好明明一样。</p>
+    <p><b>问题出在长度上：</b>长度里混进了「活跃度」这个信息。而余弦相似度把长度除掉了，只看方向：</p>
+    <div class="eq">cos(A, B) = (A·B) / (|A|·|B|) = 1</div>
+    <p>完全同向，相似度 1，判对了。</p>
+    <div class="quote">
+      <b>记住这个分工：</b>长度代表「程度／活跃度／量级」，方向代表「结构／偏好／类型」。<br>
+      问「像不像」→ 看方向（余弦）。问「差多少」→ 看距离（欧氏）。
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">5</span>工具表：这一课只留四个式子</h2>
+    <table>
+      <tr><th>名字</th><th>式子</th><th>什么时候用</th></tr>
+      <tr><td>向量</td><td class="math">a = (a<sub>1</sub>, a<sub>2</sub>, …, a<sub>n</sub>)</td><td>一条数据、一个样本、一个 embedding</td></tr>
+      <tr><td>长度（模）</td><td class="math">|a| = √(a<sub>1</sub>² + … + a<sub>n</sub>²)</td><td>量级、归一化</td></tr>
+      <tr><td>内积</td><td class="math">a · b = Σ a<sub>i</sub>b<sub>i</sub> = |a||b|cos θ</td><td>投影、相似度、线性组合</td></tr>
+      <tr><td>余弦相似度</td><td class="math">cos θ = (a·b) / (|a||b|)</td><td>推荐、检索、文本相似——取值范围 −1 到 1</td></tr>
+    </table>
+    <p class="small">余弦为 1：完全同向 · 0：垂直、无关 · −1：完全相反。现实中的 embedding 相似度通常落在 0.2–0.9，0.8 以上已经算「很像」。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">6</span>手算一遍，别跳</h2>
+    <p>用开头那三首歌的数字，算「晴天」和「Shape of You」：</p>
+    <div class="eq">a = (3, 7, 8)　　b = (8, 6, 9)</div>
+    <p><b>第一步，内积：</b>3×8 + 7×6 + 8×9 = 24 + 42 + 72 = <b>138</b></p>
+    <p><b>第二步，长度：</b>|a| = √(9+49+64) = √122 ≈ 11.05；|b| = √(64+36+81) = √181 ≈ 13.45</p>
+    <p><b>第三步，余弦：</b>138 ÷ (11.05 × 13.45) = 138 ÷ 148.6 ≈ <b>0.93</b></p>
+    <p>0.93，方向高度一致，两首歌确实「像」。再算「晴天」和「大悲咒」(1, 2, 9)：内积 = 3+14+72 = 89，|c| = √(1+4+81)=√86≈9.27，cos = 89 ÷ (11.05×9.27) ≈ <b>0.87</b>。</p>
+    <p class="small">咦，也 0.87？因为这两个数字都是正数，「大悲咒」的人声分也很高（8 分和 9 分），把整体拉得偏同向了。真实系统用几千维特征就是为了避免这种粗糙。这也说明：<b>特征的选取决定了「像」的定义</b>——这是建模里最值钱的一步。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">7</span>动手：10 分钟，用 numpy 算</h2>
+    <p>打开终端，进 <code>python3</code>，逐行敲（别复制一整段，一行一行来，看每行的输出）：</p>
+<pre><span class="c"># 1. 把两条数据写成向量</span>
+<span class="k">import</span> numpy <span class="k">as</span> np
+a = np.array([<span class="s">3</span>, <span class="s">7</span>, <span class="s">8</span>])      <span class="c"># 晴天</span>
+b = np.array([<span class="s">8</span>, <span class="s">6</span>, <span class="s">9</span>])      <span class="c"># Shape of You</span>
+
+<span class="c"># 2. 内积：@ 就是点积</span>
+<span class="k">print</span>(a @ b)                <span class="c"># 138</span>
+
+<span class="c"># 3. 长度</span>
+<span class="k">print</span>(np.linalg.norm(a))    <span class="c"># 11.045…</span>
+
+<span class="c"># 4. 余弦相似度</span>
+cos = (a @ b) / (np.linalg.norm(a) * np.linalg.norm(b))
+<span class="k">print</span>(cos)                  <span class="c"># 0.9283…</span></pre>
+    <p><b>然后做三件事</b>（这一步比看代码重要）：</p>
+    <p>① 把 b 改成 <code>[16, 12, 18]</code>（所有数乘 2），再算 cos——结果变了吗？<br>
+    ② 把 b 改成 <code>[9, 7, 3]</code>（顺序反过来），cos 变成多少？<br>
+    ③ 把 b 改成 <code>[-3, -7, -8]</code>，cos 是多少？为什么？</p>
+    <div class="quote">
+      <b>你应该发现：</b>① 长度翻倍，余弦不变（方向没变）；② 换了顺序，相似度掉下来（位置即特征，错位就没法比）；③ 完全相反，约等于 −1。<br>
+      这三条就是「向量是有序的」和「余弦只看方向」的直接证据。
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">8</span>练习：三道，做完对答案</h2>
+
+    <div class="ex">
+      <div class="q"><span class="qn">1</span><span>a = (2, 0)，b = (1, √3)。求内积、|a|、|b|、夹角余弦。</span></div>
+      <p class="hint">可以只用内积那一条式子，也可以用几何直觉（b 的方向是 60°）。</p>
+      <details><summary>对答案</summary>
+        <div class="ans">
+          a·b = 2×1 + 0×√3 = <b>2</b>；|a| = 2；|b| = √(1+3) = 2。
+          <span class="step">cos = 2/(2×2) = <b>0.5</b>，所以 θ = 60°。和「b 在 60° 方向」的直觉一致。</span>
+        </div>
+      </details>
+    </div>
+
+    <div class="ex">
+      <div class="q"><span class="qn">2</span><span>用户 A 评分 (1, 1)，用户 B 评分 (10, 10)。分别算欧氏距离和余弦相似度，然后回答：推荐系统该用哪个？为什么？</span></div>
+      <details><summary>对答案</summary>
+        <div class="ans">
+          距离 = √(81+81) ≈ <b>12.7</b>；余弦 = (10+10)/(√2·√200) = 20/20 = <b>1</b>。
+          <span class="step">用余弦。两人口味结构完全相同，只是活跃度不同；用距离会把「活跃」误判成「不像」。若确实想区分活跃度，应该把长度作为单独的一维特征，而不是塞进相似度里。</span>
+        </div>
+      </details>
+    </div>
+
+    <div class="ex">
+      <div class="q"><span class="qn">3</span><span>（编程）把下面三个「句子向量」两两算余弦，找出与第 1 句最像的：</span></div>
+<pre>s1 = np.array([0.2, 0.8, 0.1, 0.5])
+s2 = np.array([0.1, 0.9, 0.0, 0.6])
+s3 = np.array([0.7, 0.1, 0.9, 0.2])</pre>
+      <p class="hint">先猜再算——猜错的地方就是你直觉还没长好的地方。</p>
+      <details><summary>对答案</summary>
+        <div class="ans">
+          cos(s1,s2) ≈ <b>0.987</b>；cos(s1,s3) ≈ 0.364；cos(s2,s3) ≈ 0.222。
+          <span class="step">s1 与 s2 最像。注意：这两个向量长度不同，但方向很近——这就是「只看方向」的好处。</span>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section>
+    <div class="next">
+      <h3>明日问题（带着它睡）</h3>
+      <p>余弦相似度能告诉你「有多像」，但回答不了下一个问题：<span class="q">如果我想把 A 变成 B，该怎么「变」？</span></p>
+      <p style="margin-top:8px">—— 这就是矩阵要做的事。下一课：<b>矩阵是一次变换</b>。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="recall">
+      <b>收尾：合上这一页，先自己答这四问，再回看。</b>
+      <ol>
+        <li>为什么内积可以写成「对应相乘再相加」？</li>
+        <li>余弦相似度里为什么要除以两个长度？</li>
+        <li>什么情况下该用距离而不是余弦？</li>
+        <li>把向量 b 放大 3 倍，夹角会变吗？为什么？</li>
+      </ol>
+    </div>
+  </section>
+
+  <div class="pager">
+    <a href="index.html">← 回到路线图</a>
+    <span style="color:var(--muted)">第 2 课：矩阵是一次变换（待解锁）</span>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var O = {x:160, y:240}, sc = 50;
+  var lenA = 2.0, lenB = 3.0;
+  var slider = document.getElementById('ang');
+
+  function P(ang, len){
+    var r = ang * Math.PI / 180;
+    return { x: O.x + len*sc*Math.cos(r), y: O.y - len*sc*Math.sin(r) };
+  }
+
+  function draw(){
+    var th = +slider.value;
+    var A = P(0, lenA), B = P(th, lenB);
+    var ca = Math.cos(th*Math.PI/180), sa = Math.sin(th*Math.PI/180);
+    var cos = Math.cos(th*Math.PI/180);
+
+    document.getElementById('va').setAttribute('x2', A.x);
+    document.getElementById('va').setAttribute('y2', A.y);
+    document.getElementById('vb').setAttribute('x2', B.x);
+    document.getElementById('vb').setAttribute('y2', B.y);
+
+    // 投影点：a 在 b 方向上的影子
+    var dot = lenA*lenB*cos;            // a·b (单位长度约定)
+    var t = dot/(lenB*lenB);            // 投影系数
+    var px = O.x + t*(B.x-O.x), py = O.y + t*(B.y-O.y);
+    var proj = document.getElementById('proj');
+    proj.setAttribute('x2', px); proj.setAttribute('y2', py);
+    proj.setAttribute('stroke', cos >= 0 ? '#9f1239' : '#7c3aed');
+    var pd = document.getElementById('projdash');
+    pd.setAttribute('x1', px); pd.setAttribute('y1', py);
+    pd.setAttribute('x2', A.x); pd.setAttribute('y2', A.y);
+    pd.setAttribute('stroke', cos >= 0 ? '#9f1239' : '#7c3aed');
+
+    // 夹角弧
+    var r = 46;
+    var a0 = Math.atan2(O.y-A.y, A.x-O.x);
+    var a1 = Math.atan2(O.y-B.y, B.x-O.x);
+    var sx = O.x + r*Math.cos(a0), sy = O.y - r*Math.sin(a0);
+    var ex = O.x + r*Math.cos(a1), ey = O.y - r*Math.sin(a1);
+    var large = Math.abs(a1-a0) > Math.PI ? 1 : 0;
+    var sweep = (a1 > a0) ? 0 : 1;
+    document.getElementById('arc').setAttribute('d',
+      'M '+sx+' '+sy+' A '+r+' '+r+' 0 '+large+' '+sweep+' '+ex+' '+ey);
+
+    // 标签位置
+    var la = document.getElementById('la');
+    la.setAttribute('x', A.x + 8); la.setAttribute('y', A.y + 5);
+    var lb = document.getElementById('lb');
+    lb.setAttribute('x', B.x + 8); lb.setAttribute('y', B.y - 6);
+    var lth = document.getElementById('lth');
+    var mid = (a0 + a1)/2;
+    lth.setAttribute('x', O.x + (r+14)*Math.cos(mid) - 3);
+    lth.setAttribute('y', O.y - (r+14)*Math.sin(mid) + 5);
+    lth.textContent = 'θ';
+
+    // 读数
+    document.getElementById('r-ang').textContent = 'θ = ' + th + '°';
+    document.getElementById('r-cos').textContent = 'cos θ = ' + cos.toFixed(3);
+    document.getElementById('r-len').textContent = '投影 = ' + (lenA*cos).toFixed(2);
+
+    var tag = document.getElementById('r-tag');
+    if (cos > 0.9)      { tag.textContent = '几乎同向'; tag.className = 'pill ok'; }
+    else if (cos > 0.5) { tag.textContent = '比较像';   tag.className = 'pill ok'; }
+    else if (cos > -0.1){ tag.textContent = '关系不大'; tag.className = 'pill'; }
+    else if (cos > -0.6){ tag.textContent = '方向相反'; tag.className = 'pill warn'; }
+    else                { tag.textContent = '几乎相反'; tag.className = 'pill warn'; }
+  }
+
+  // 网格
+  var g = document.getElementById('grid');
+  var s = '';
+  for (var x = O.x - 150; x <= 410; x += 50) s += '<line x1="'+x+'" y1="16" x2="'+x+'" y2="256"/>';
+  for (var y = 240; y >= 40; y -= 50)         s += '<line x1="10" y1="'+y+'" x2="410" y2="'+y+'"/>';
+  g.innerHTML = s;
+
+  slider.addEventListener('input', draw);
+  var q = new URLSearchParams(location.search).get('a');
+  if (q !== null && !isNaN(+q)) slider.value = +q;
+  draw();
+})();
+</script>
+</body>
+</html>

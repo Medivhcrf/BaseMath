@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>三科其实是一件事 · 应用数学路线</title>
+<style>
+  :root{
+    --bg:#f7f5ef; --card:#fffdf8; --ink:#16233a; --muted:#5b6b7f;
+    --line:#e3ded2; --line2:#d2cbbb;
+    --teal:#0d6f6a; --blue:#1d4ed8; --amber:#a16207; --rose:#9f1239; --violet:#5b21b6;
+    --mono:'JetBrains Mono','DejaVu Sans Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Noto Sans CJK SC','Source Han Sans SC','Microsoft YaHei',sans-serif;
+    line-height:1.75; font-size:16px;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:0 22px 90px}
+  .serif{font-family:'Noto Serif CJK SC','Songti SC','SimSun',serif}
+
+  /* ---------- 头部 ---------- */
+  header{padding:56px 0 30px;border-bottom:1px solid var(--line2);margin-bottom:36px}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;letter-spacing:.18em;color:var(--teal);font-weight:700;text-transform:uppercase}
+  .kicker::before{content:"";width:26px;height:2px;background:var(--teal)}
+  h1{font-size:clamp(30px,5.2vw,44px);line-height:1.22;margin:16px 0 12px;letter-spacing:.01em;font-weight:800}
+  h1 .hl{background:linear-gradient(transparent 62%, #d9e8e4 62%);padding:0 2px}
+  .lede{font-size:17px;color:var(--muted);max-width:640px}
+  .lede b{color:var(--ink)}
+
+  /* ---------- 条件 chips ---------- */
+  .conds{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+  .chip{font-size:13px;padding:5px 12px;border:1px solid var(--line2);border-radius:999px;background:var(--card);color:#3c4a5e}
+  .chip b{color:var(--teal)}
+
+  /* ---------- 段落通用 ---------- */
+  section{margin-bottom:52px}
+  h2{font-size:13px;letter-spacing:.16em;color:var(--muted);font-weight:800;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+  h2::after{content:"";flex:1;height:1px;background:var(--line)}
+  h3{font-size:21px;font-weight:800;margin-bottom:8px;letter-spacing:.01em}
+  p{color:#33415a}
+  .big{font-size:19px;line-height:1.85;color:var(--ink)}
+  .big em{font-style:normal;color:var(--teal);font-weight:700}
+  .small{font-size:13.5px;color:var(--muted)}
+
+  /* ---------- 原则卡片 ---------- */
+  .rules{display:grid;gap:14px}
+  .rule{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px 20px 62px}
+  .rule .num{position:absolute;left:20px;top:20px;width:26px;height:26px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;background:var(--teal)}
+  .rule:nth-child(2) .num{background:var(--blue)}
+  .rule:nth-child(3) .num{background:var(--amber)}
+  .rule:nth-child(4) .num{background:var(--rose)}
+  .rule:nth-child(5) .num{background:var(--violet)}
+  .rule h4{font-size:16.5px;margin-bottom:4px}
+  .rule h4 span{font-weight:400;color:#8a94a3;font-size:12.5px;margin-left:8px;letter-spacing:.02em}
+  .rule p{font-size:14.5px;line-height:1.72;color:#3a475c}
+  .rule p b{color:var(--ink)}
+  .rule code{background:#eef2f7;padding:1px 6px;border-radius:5px;font-family:var(--mono);font-size:13px;color:var(--blue)}
+
+  /* ---------- 45 分钟时间条 ---------- */
+  .daybar{display:flex;height:46px;border-radius:10px;overflow:hidden;border:1px solid var(--line2);margin:18px 0 14px;font-size:12.5px;font-weight:700;color:#fff}
+  .daybar div{display:flex;align-items:center;justify-content:center;white-space:nowrap;min-width:0;overflow:hidden;padding:0 4px}
+  .seg-a{flex:5;background:#0d6f6a}
+  .seg-b{flex:25;background:#1d4ed8}
+  .seg-c{flex:10;background:#a16207}
+  .seg-d{flex:5;background:#9f1239}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;font-size:13px;color:#3c4a5e}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+
+  /* ---------- 路线 ---------- */
+  .phase{display:grid;grid-template-columns:74px 1fr;gap:18px;padding:20px 0;border-top:1px solid var(--line)}
+  .phase:first-of-type{border-top:none}
+  .ph-code{font-family:var(--mono);font-size:12px;color:var(--muted);padding-top:4px;line-height:1.5}
+  .ph-code b{display:block;font-family:'Noto Serif CJK SC',serif;font-size:17px;color:var(--ink);margin-top:0}
+  .phase h4{font-size:18px;margin-bottom:2px}
+  .phase .wk{font-size:12.5px;color:var(--teal);font-weight:700;letter-spacing:.05em}
+  .phase ul{list-style:none;margin-top:10px;display:grid;gap:5px}
+  .phase li{font-size:14.5px;color:#3a475c;padding-left:16px;position:relative}
+  .phase li::before{content:"";position:absolute;left:2px;top:11px;width:6px;height:6px;border-radius:50%;background:var(--line2)}
+  .verify{margin-top:12px;background:#eef6f4;border-left:3px solid var(--teal);padding:10px 14px;border-radius:0 8px 8px 0;font-size:14px}
+  .verify b{color:var(--teal)}
+
+  /* ---------- 三视角表 ---------- */
+  table{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:6px;background:var(--card)}
+  th,td{padding:13px 14px;border:1px solid var(--line);text-align:left;vertical-align:top;line-height:1.65}
+  th{background:#efece3;font-size:13px;letter-spacing:.05em;color:#3c4a5e}
+  td:first-child{white-space:nowrap;font-weight:700;color:var(--teal);font-size:14px}
+  .math{font-family:'Times New Roman','DejaVu Serif',serif;font-style:italic;font-size:16px}
+
+  /* ---------- 砍掉清单 ---------- */
+  .cut{background:#fbf3f3;border:1px solid #ecd9d9;border-radius:14px;padding:20px 22px}
+  .cut h3{color:var(--rose);font-size:17px;margin-bottom:10px}
+  .cut ul{list-style:none;display:grid;gap:8px}
+  .cut li{font-size:14.5px;color:#4a3b3b;padding-left:24px;position:relative}
+  .cut li::before{content:"×";position:absolute;left:4px;top:-1px;color:var(--rose);font-weight:800;font-size:15px}
+  .cut li b{color:#7f1d1d}
+
+  /* ---------- CTA ---------- */
+  .cta{background:var(--ink);color:#f4f1e8;border-radius:16px;padding:30px 28px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px}
+  .cta h3{color:#fff;font-size:21px;margin-bottom:4px}
+  .cta p{color:#b9c3d3;font-size:14px}
+  .btn{display:inline-block;background:#e8dfc8;color:#16233a;text-decoration:none;font-weight:800;padding:12px 22px;border-radius:10px;font-size:15px;letter-spacing:.02em}
+  .btn:hover{background:#fff}
+
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line2);font-size:12.5px;color:#8a94a3;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+  @media (max-width:430px){
+    .daybar{font-size:10px}
+    .daybar div{padding:0 2px}
+  }
+  @media (max-width:640px){
+    body{font-size:15px}
+    header{padding-top:36px}
+    .wrap{padding:0 16px 70px}
+    .rule{padding:18px 18px 18px 54px}
+    .rule .num{left:16px;top:18px;width:24px;height:24px}
+    .phase{grid-template-columns:1fr;gap:6px}
+    .ph-code{display:flex;gap:10px;align-items:baseline}
+    .ph-code b{font-size:15px}
+    .daybar{font-size:11px}
+    .cta{flex-direction:column;align-items:flex-start}
+    th,td{padding:10px 9px;font-size:13.5px}
+    td:first-child{white-space:normal}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">应用数学 · 自学路线</div>
+    <h1>三科其实<span class="hl">是一件事</span></h1>
+    <p class="lede">
+      高等数学、线性代数、概率论不是三门课，而是描述同一个世界的三种语言：
+      <b>空间</b>、<b>变化</b>、<b>不确定</b>。
+      你不需要按教材的顺序从头啃——你需要一条能在 <b>20 周内把它们合流</b> 的路线。
+    </p>
+    <div class="conds">
+      <span class="chip">目标 <b>应用向</b></span>
+      <span class="chip">基础 <b>忘了大半</b></span>
+      <span class="chip">时间 <b>每天 &lt; 1 小时</b></span>
+      <span class="chip">形式 <b>不要教材那套</b></span>
+    </div>
+  </header>
+
+  <section>
+    <h2>为什么教材的顺序不适合你</h2>
+    <p class="big">
+      教材是「定义 → 定理 → 证明 → 习题」。这个顺序服务于<b>要应考、有大块时间</b>的人：
+      先把体系搭完整，再用习题磨熟。
+    </p>
+    <p class="big" style="margin-top:14px">
+      你的约束正好反过来——时间碎、要用、不考试。所以这门课<em>倒过来排</em>：
+      先定一个终局目标，再倒推每个概念「为什么必须在此时出现」。
+      <br>终局目标是这一句：
+    </p>
+    <div class="verify" style="font-size:15.5px;margin-top:16px">
+      <b>第 20 周末：</b>你能用 numpy 从零写出一份线性回归，并且分别用<b>线代、概率、微积分</b>三种语言说清它为什么有效。
+    </div>
+  </section>
+
+  <section>
+    <h2>五条方法</h2>
+    <div class="rules">
+
+      <div class="rule">
+        <div class="num">1</div>
+        <h4>意义先行：先讲它在现实里是什么<span>名字最后再给</span></h4>
+        <p>每个概念先给一个<b>能被身体或眼睛验证的场景</b>——做功、称重、找雷达目标——再给名字，最后才给公式。比如内积：先讲「斜着推箱子为什么只做一半的功」，再落到「加权求和」，公式已经是第三手的东西。<b>能用一句大白话说出它现实里在干嘛，才算学会。</b></p>
+      </div>
+
+      <div class="rule">
+        <div class="num">2</div>
+        <h4>三遍法：直觉 → 工具 → 应用<span>每个概念走三遍，间隔递增</span></h4>
+        <p>第一遍只求<b>图像感</b>（它长什么样、几何上在做什么）；第二遍才给必要的公式与算法，只求<b>会算会用</b>；第三遍放进代码或真实场景，看到它<b>跑起来</b>。三遍分别落在当天、第 2 天、第 4 天。</p>
+      </div>
+
+      <div class="rule">
+        <div class="num">3</div>
+        <h4>复习靠「想」不靠「看」<span>主动回忆 + 间隔 1 / 3 / 7 / 21 天</span></h4>
+        <p>重读笔记会产生「我懂了」的错觉。真正有效的是<b>合上笔记，先写出来，再对照</b>。每天开头 5 分钟就干这个：回忆昨天，答不上来的正是明天要补的。这是整条路线里投入产出比最高的一步。</p>
+      </div>
+
+      <div class="rule">
+        <div class="num">4</div>
+        <h4>计算练到「够用 + 能自查」<span>手算 20%，代码 80%</span></h4>
+        <p>应用向不需要题海。手算只练到<b>能估出量级、能发现荒谬答案</b>；其余用 numpy 验证。计算在这里的角色是<b>检验直觉</b>的工具，不是目的。你算错一次，比做对十题记得牢。</p>
+      </div>
+
+      <div class="rule">
+        <div class="num">5</div>
+        <h4>交错 + 错因档案<span>每周混排，错题记「为什么」</span></h4>
+        <p>应用里三科本来就是混着用的，所以练习也<b>交错排</b>，而不是学完一科再学下一科。每道错题只记一条：错在概念、公式、计算还是读题。每周扫一眼错因分布，你就知道自己真正卡在哪一层。</p>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>每天 45 分钟怎么用</h2>
+    <div class="daybar">
+      <div class="seg-a">回忆 5′</div>
+      <div class="seg-b">新概念 25′</div>
+      <div class="seg-c">动手 10′</div>
+      <div class="seg-d">收尾 5′</div>
+    </div>
+    <div class="legend">
+      <span><i style="background:#0d6f6a"></i>合上笔记默写昨天，补不上的即「明日问题」</span>
+      <span><i style="background:#1d4ed8"></i>只学一块，三遍法的第一、二遍</span>
+      <span><i style="background:#a16207"></i>改一行 numpy，看数字怎么变</span>
+      <span><i style="background:#9f1239"></i>一句话总结 + 留一个悬念</span>
+    </div>
+    <p class="small" style="margin-top:14px">每周留 1 天不学新课，只做「本周回忆 + 错因扫一遍」。休息也是计划的一部分——记忆在间隔里长，不在学习时。</p>
+  </section>
+
+  <section>
+    <h2>路线图 · 20 周</h2>
+
+    <div class="phase">
+      <div class="ph-code">PHASE 0<b>工具</b></div>
+      <div>
+        <h4>先把「语言」装好</h4>
+        <div class="wk">第 1 周 · 5 节</div>
+        <ul>
+          <li>向量与矩阵在代码里长什么样（numpy 的形状系统）</li>
+          <li>用 matplotlib 把数学画出来——看不懂就画</li>
+          <li>本课工具包：一张可运行的笔记本，之后每课都往里加</li>
+        </ul>
+        <div class="verify"><b>验收：</b>能独立用代码画出两个向量的夹角，并说清每个参数在控制什么。</div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="ph-code">PHASE 1<b>空间</b></div>
+      <div>
+        <h4>线性代数：把数据摆成空间</h4>
+        <div class="wk">第 2–7 周 · 约 18 节</div>
+        <ul>
+          <li>向量 = 一条数据；内积 = 做功 / 加权求和 / 信号匹配</li>
+          <li>矩阵 = 一次变换（旋转、缩放、投影），乘法 = 变换的串联</li>
+          <li>秩与方程组：一个系统什么时候「有解」</li>
+          <li>最小二乘：点凑不成直线时，怎样算「最接近」的直线</li>
+          <li>特征值：变换里不动的那条线 → PCA 降维</li>
+        </ul>
+        <div class="verify"><b>验收：</b>能解释「为什么用余弦相似度而不是欧氏距离」，并亲手把一张 784 维的手写数字图投影到 2 维。</div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="ph-code">PHASE 2<b>变化</b></div>
+      <div>
+        <h4>微积分：系统怎样变、怎样调</h4>
+        <div class="wk">第 8–12 周 · 约 15 节</div>
+        <ul>
+          <li>导数 = 敏感度：输入动一点，输出动多少</li>
+          <li>链式法则 = 复合系统里误差怎样一层层传回去（反向传播的骨架）</li>
+          <li>梯度 = 最陡的上升方向 → 梯度下降怎么走</li>
+          <li>积分 = 累加：从「密度」得到「总量」（概率的入口）</li>
+          <li>泰勒与凸性：为什么优化器走了几步就稳了</li>
+        </ul>
+        <div class="verify"><b>验收：</b>能徒手写出梯度下降的更新式，并用它拟合一条直线，画损失曲线说明为什么它下降。</div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="ph-code">PHASE 3<b>不确定</b></div>
+      <div>
+        <h4>概率：为「不知道」建模</h4>
+        <div class="wk">第 13–17 周 · 约 15 节</div>
+        <ul>
+          <li>条件概率与贝叶斯：新证据怎样改写判断</li>
+          <li>随机变量与常见分布（正态、伯努利、泊松）各自在建模什么</li>
+          <li>期望、方差、大数定律：为什么样本均值会稳下来</li>
+          <li>中心极限定理：为什么误差天然是钟形</li>
+          <li>极大似然：把「概率」接回「优化」的那座桥</li>
+        </ul>
+        <div class="verify"><b>验收：</b>能设计并解读一个 A/B 测试，说出「显著」到底在说什么。</div>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="ph-code">PHASE 4<b>合流</b></div>
+      <div>
+        <h4>线性回归：三科第一次见面</h4>
+        <div class="wk">第 18–20 周 · 约 8 节</div>
+        <ul>
+          <li>用线代看：解 = 投影，残差垂直于列空间</li>
+          <li>用概率看：高斯噪声下的极大似然，恰好就是最小二乘</li>
+          <li>用微积分看：碗形损失，梯度下降一步步滑到底</li>
+          <li>收尾项目：从零实现 + 一段 500 字说明，我来批改</li>
+        </ul>
+        <div class="verify"><b>验收：</b>同一个模型，三种讲法，讲给完全没学过数学的人听懂。</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>贯穿主线的例子：线性回归</h2>
+    <p style="margin-bottom:14px">这是整条路线最后一个例子，也是第一个「三科真正合体」的时刻。先记住这张表，后面每学一块，就回来补上自己那一行。</p>
+    <table>
+      <tr><th style="width:110px">视角</th><th>同一件事的三种说法</th></tr>
+      <tr>
+        <td>线性代数</td>
+        <td>观测值 <span class="math">y</span> 不在 <span class="math">X</span> 的列空间里，于是把它<b>投影</b>进去；投影点与 <span class="math">y</span> 的差（残差）垂直于列空间——这就是「最优」的几何定义。</td>
+      </tr>
+      <tr>
+        <td>概率</td>
+        <td>假设 <span class="math">y = Xw + ε</span>，<span class="math">ε ~ N(0, σ²)</span>。让这组数据最可能发生的 <span class="math">w</span>，就是<b>极大似然估计</b>——而它在高斯假设下恰好等于最小二乘。</td>
+      </tr>
+      <tr>
+        <td>微积分</td>
+        <td>损失 <span class="math">L(w) = ||Xw − y||²</span> 是一口碗。梯度指向最陡上升方向，于是沿负梯度走，就能滚到碗底——<b>梯度下降</b>。</td>
+      </tr>
+    </table>
+    <p class="small" style="margin-top:12px">三种语言描述的是同一个解。哪天你能自己把这三段话讲出来，这门课就毕业了。</p>
+  </section>
+
+  <section>
+    <h2>明确不学的东西</h2>
+    <div class="cut">
+      <h3>省下来的时间，全部投给「用」</h3>
+      <ul>
+        <li><b>ε-δ 极限的严格定义</b>——只作为选读，知道它存在即可，应用里用不到。</li>
+        <li><b>大量证明</b>——每个定理只需要「为什么它不荒谬」的一句话直觉，证明过程跳过。</li>
+        <li><b>计算题海</b>——不刷 500 道积分，只做能暴露理解漏洞的少数几道。</li>
+        <li><b>教材章节顺序</b>——同一本书的章与章之间没有依赖关系，我们按「用的先后」重排。</li>
+        <li><b>为了考试而背的公式表</b>——公式全部从直觉推一次，忘了能重推。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>每节课长什么样</h2>
+    <div class="rules">
+      <div class="rule" style="border-left:3px solid var(--teal)">
+        <h4>固定五块，顺序不换</h4>
+        <p>每个概念都按「现实 → 几何 → 公式」三层走，公式永远最后出现。</p>
+        <p>
+          <b>① 一个现实场景</b>（它在物理世界里干什么）·
+          <b>② 一幅图</b>（几何直觉）·
+          <b>③ 一张工具表</b>（够用的公式，放最后）·
+          <b>④ 一段能跑的代码</b> ·
+          <b>⑤ 3 道练习 + 明日问题</b><br>
+          你交作业，我按「错因类型」批改，并把你卡住的点记进错因档案。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta">
+    <div>
+      <h3>准备好了就从第 1 课开始</h3>
+      <p>第 1 课：向量是「一条数据」——从「这两样东西有多像」讲起，45 分钟，有代码。</p>
+    </div>
+    <a class="btn" href="lesson-01.html">进入第 1 课 →</a>
+  </div>
+
+  <footer>
+    <span>应用数学自学路线 · v1</span>
+    <span>工作区 /home/crf/mathLearning · 每天 45 分钟</span>
+  </footer>
+
+</div>
+</body>
+</html>
