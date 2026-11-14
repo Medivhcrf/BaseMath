@@ -41,6 +41,8 @@
   p b{color:var(--ink)}
   .big{font-size:18.5px;line-height:1.85;color:var(--ink)}
   em{font-style:normal;color:var(--teal);font-weight:700}
+  ul,ol{margin:10px 0 14px;padding-left:22px}
+  li{margin-bottom:6px;color:#3a475c}
 
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:16px 0}
   .quote{background:#fbf8f0;border:1px dashed var(--line2);border-radius:12px;padding:16px 20px;font-size:15px;color:#4a5468;margin:16px 0}
@@ -283,6 +285,30 @@
     <div class="quote">
       <b>一句话：</b>内积告诉你「对上了多少」，不告诉你「像不像」。要问像不像，先除以两个长度。
     </div>
+
+    <h3>换成 4 维、100 维，公式一个字都不用改</h3>
+    <p>二维的算法是「横坐标相乘＋纵坐标相乘」。n 维没有任何新东西，只是括号里多了几项：</p>
+    <div class="eq math">a · b = a₁b₁ + a₂b₂ + … + a<sub>n</sub>b<sub>n</sub> = Σ a<sub>i</sub>b<sub>i</sub></div>
+    <p>二维是两项，四维是四项，一百维是一百项。下面的数字都核过：</p>
+    <table>
+      <tr><th>向量</th><th>内积</th><th>说明</th></tr>
+      <tr><td>(1, 2) 和 (3, 4)</td><td><b>11</b></td><td>1×3 + 2×4，两项</td></tr>
+      <tr><td>(1, 2, 0, 0) 和 (3, 4, 0, 0)</td><td><b>11</b></td><td>补零补到四维，结果不变——缺的维度贡献 0</td></tr>
+      <tr><td>(1, 2, 3, 4) 和 (5, 6, 7, 8)</td><td><b>70</b></td><td>5+12+21+32，四项</td></tr>
+      <tr><td>100 个 1 和 100 个 1</td><td><b>100</b></td><td>一百项，cos = 1（自己和自己）</td></tr>
+    </table>
+    <p>第二行值得多看一眼：把二维数据补零到四维，内积、余弦、距离全都不变。这解释了一件工程上的事——<b>嵌入维度取多少，只要两边对齐，同一个算法就照跑</b>。真正的要求只有一条：<b>两边维度必须一样</b>，不然连「配对」都配不上。</p>
+
+    <h3>为什么可以这么推广：定义顺序反过来了</h3>
+    <p>二维里你是先有「长度和夹角」，再用余弦定理推出 a·b = |a||b|cos θ。到了 n 维，我们没有眼睛去看夹角，于是反过来：</p>
+    <ol>
+      <li>先<b>定义</b>内积为 Σ a<sub>i</sub>b<sub>i</sub>（纯代数，能算就行）；</li>
+      <li>再用它<b>定义</b>长度 <span class="math">|a| = √(a·a)</span>；</li>
+      <li>最后用它<b>定义</b>夹角 <span class="math">cos θ = a·b / (|a||b|)</span>。</li>
+    </ol>
+    <p>于是「投影」「夹角」「垂直（内积为 0）」这些几何词，在 n 维全部靠这个式子活着。二维的余弦定理只是它在平面上的一个<b>自洽的验证</b>，不是前提。</p>
+    <p>这也是内积能从平面一路走到 100 维词向量、再到函数空间的同一个式子 <span class="math">∫ f(x)g(x) dx</span> 的原因：把「求和」换成「积分」，其他全不动。<b>换个求和圈，不换公式。</b></p>
+    <p class="small">编程视角：向量就是数组，a·b 在 numpy 里是 np.dot(a, b) 或 a @ b，代价 O(n)。矩阵乘 A @ B 的每个元素，都是一行和一列的内积——所以整个线性代数都是这个动作堆出来的。</p>
   </section>
 
   <section>
