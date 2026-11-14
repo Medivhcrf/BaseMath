@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 3 课 · 秩与方程组：什么时候有解</title>
+<style>
+  :root{
+    --bg:#f7f5ef; --card:#fffdf8; --ink:#16233a; --muted:#5b6b7f;
+    --line:#e3ded2; --line2:#d2cbbb;
+    --teal:#0d6f6a; --blue:#1d4ed8; --amber:#a16207; --rose:#9f1239; --violet:#5b21b6;
+    --mono:'JetBrains Mono','DejaVu Sans Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);font-family:'Noto Sans CJK SC','Source Han Sans SC','Microsoft YaHei',sans-serif;line-height:1.78;font-size:16px}
+  .wrap{max-width:820px;margin:0 auto;padding:0 22px 90px}
+  a{color:var(--blue)}
+
+  .topnav{display:flex;justify-content:space-between;font-size:13px;padding:18px 0 0;color:var(--muted)}
+  .topnav a{text-decoration:none}
+
+  header{padding:26px 0 26px;border-bottom:1px solid var(--line2);margin-bottom:34px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .tag{font-size:12px;padding:3px 10px;border-radius:999px;background:#e9f0ef;color:var(--teal);font-weight:700;letter-spacing:.04em}
+  .tag.b{background:#e8ecfb;color:var(--blue)}
+  .tag.c{background:#f6eadd;color:var(--amber)}
+  h1{font-size:clamp(26px,4.6vw,36px);line-height:1.25;font-weight:800;letter-spacing:.01em}
+  .sub{color:var(--muted);font-size:16px;margin-top:8px}
+  .sub b{color:var(--ink)}
+
+  .goal{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:0 12px 12px 0;padding:16px 20px;margin-top:20px;font-size:14.5px}
+  .goal b{color:var(--teal)}
+
+  section{margin-bottom:44px}
+  h2{font-size:13px;letter-spacing:.16em;color:var(--muted);font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+  h2 .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;letter-spacing:0;flex:none}
+  h2::after{content:"";flex:1;height:1px;background:var(--line)}
+  h3{font-size:19px;font-weight:800;margin:18px 0 8px}
+  p{color:#33415a;margin-bottom:12px}
+  p b{color:var(--ink)}
+  .big{font-size:18.5px;line-height:1.85;color:var(--ink)}
+  em{font-style:normal;color:var(--teal);font-weight:700}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:16px 0}
+  .quote{background:#fbf8f0;border:1px dashed var(--line2);border-radius:12px;padding:16px 20px;font-size:15px;color:#4a5468;margin:16px 0}
+  .quote b{color:var(--amber)}
+  .small{font-size:13.5px;color:var(--muted)}
+  ul,ol{margin:10px 0 14px;padding-left:22px}
+  li{margin-bottom:6px;color:#3a475c}
+
+  /* 交互图 */
+  .fig{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 16px 10px;margin:18px 0}
+  .fig svg{display:block;width:100%;max-width:520px;height:auto;margin:0 auto}
+  .fig .cap{font-size:12.5px;color:var(--muted);text-align:center;padding:6px 0 8px}
+  .readout{display:flex;gap:8px;flex-wrap:wrap;padding:0 6px 12px;font-size:13px;justify-content:center}
+  .pill{font-family:var(--mono);background:#eef2f7;color:#1f3a68;padding:4px 10px;border-radius:7px}
+  .pill.warn{background:#fdecec;color:#9f1239}
+  .pill.ok{background:#e9f0ef;color:#0d6f6a}
+  .pill.mid{background:#f6eadd;color:#a16207}
+
+  .modebar{display:flex;gap:8px;justify-content:center;padding:2px 4px 10px}
+  .modebar button{font:inherit;font-size:13px;padding:6px 16px;border-radius:999px;border:1px solid var(--line2);background:#f4f1e8;color:#3c4a5e;cursor:pointer;transition:background .15s}
+  .modebar button:hover{background:#e9e4d6}
+  .modebar button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  .ctrls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px 20px;padding:6px 4px}
+  .ctrls .row{display:flex;align-items:center;gap:9px;font-size:13px;color:#3c4a5e}
+  .ctrls .row b{font-family:var(--mono);width:12px;color:#16233a;text-align:center}
+  .ctrls .row input{flex:1;min-width:60px;accent-color:#1d4ed8}
+  .ctrls .row .v{font-family:var(--mono);width:42px;text-align:right;font-size:12.5px;color:#1f3a68}
+  .presets{display:flex;flex-wrap:wrap;gap:8px;padding:10px 4px 12px;justify-content:center}
+  .presets button{font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;border:1px solid var(--line2);background:#f4f1e8;color:#3c4a5e;cursor:pointer;transition:background .15s}
+  .presets button:hover{background:#e9e4d6}
+  .presets button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  /* 公式 */
+  .math{font-family:'Times New Roman','DejaVu Serif',serif;font-size:17.5px}
+  .eq{display:block;text-align:center;background:#f3f1e9;border-radius:10px;padding:14px 12px;margin:14px 0;font-family:'Times New Roman','DejaVu Serif',serif;font-size:19px;letter-spacing:.02em;overflow-x:auto;white-space:nowrap}
+
+  table{width:100%;border-collapse:collapse;font-size:14.5px;margin:14px 0;background:var(--card)}
+  th,td{padding:11px 13px;border:1px solid var(--line);text-align:left;vertical-align:top;line-height:1.6}
+  th{background:#efece3;font-size:12.5px;letter-spacing:.05em;color:#3c4a5e;font-weight:700}
+  td:first-child{white-space:nowrap;font-weight:700;color:var(--teal)}
+  .mono{font-family:var(--mono);font-size:13.5px}
+
+  .matshow{display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--mono);font-size:15px;margin:16px 0}
+  .matshow .cells{display:grid;grid-template-columns:60px 60px;text-align:center;row-gap:2px}
+  .matshow .br{font-family:'Times New Roman','DejaVu Serif',serif;font-size:46px;line-height:.85;color:#46536b;font-weight:400}
+  .matshow .nm{font-family:'Times New Roman',serif;font-size:17px;margin-right:4px}
+  .matshow .cells.one{grid-template-columns:56px}
+
+  pre{background:#152034;color:#e6edf7;border-radius:12px;padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;line-height:1.65;margin:14px 0}
+  pre .c{color:#7d8fa8}
+  pre .k{color:#8fd3ff}
+  pre .s{color:#ffd479}
+  code{font-family:var(--mono);font-size:13.5px;background:#eef2f7;padding:1px 6px;border-radius:5px;color:#1f3a68}
+
+  /* 练习 */
+  .ex{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+  .ex .q{font-weight:700;color:var(--ink);font-size:15.5px;margin-bottom:6px;display:flex;gap:10px}
+  .ex .q .qn{color:var(--blue);font-family:var(--mono);flex:none}
+  .ex .hint{font-size:13.5px;color:var(--muted)}
+  details{margin-top:10px;border-top:1px dashed var(--line2);padding-top:10px}
+  summary{cursor:pointer;font-size:13.5px;font-weight:700;color:var(--teal);list-style:none;user-select:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸ ";display:inline-block;transition:transform .15s}
+  details[open] summary::before{transform:rotate(90deg)}
+  details .ans{margin-top:10px;font-size:14.5px;color:#3a475c}
+  details .ans .step{color:var(--muted);font-size:13.5px;display:block;margin-top:4px}
+
+  /* 明日问题 */
+  .next{background:var(--ink);color:#f4f1e8;border-radius:16px;padding:26px 26px}
+  .next h3{color:#fff;font-size:19px;margin:0 0 8px}
+  .next p{color:#c3ccdb;font-size:15px;margin:0}
+  .next b{color:#ffe7a8}
+  .next .q{color:#ffe7a8;font-style:normal;font-weight:700}
+
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:46px;padding-top:20px;border-top:1px solid var(--line2);font-size:14px}
+
+  /* 复习卡 */
+  .recall{background:#f0f5f4;border:1px solid #d3e3df;border-radius:12px;padding:16px 20px;font-size:14.5px}
+  .recall b{color:var(--teal)}
+  .recall ol{margin:8px 0 0 20px}
+  .recall li{margin-bottom:5px;color:#3a475c}
+
+  @media (max-width:640px){
+    body{font-size:15px}
+    .wrap{padding:0 16px 70px}
+    header{padding-top:18px}
+    .eq{font-size:16px;white-space:normal}
+    table{font-size:13.5px}
+    th,td{padding:9px 10px}
+    td:first-child{white-space:normal}
+    .ctrls{grid-template-columns:1fr 1fr}
+    .matshow .cells{grid-template-columns:48px 48px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topnav">
+    <a href="lesson-02.html">← 第 2 课</a>
+    <span>第 3 课 / 阶段 1 · 空间</span>
+  </div>
+
+  <header>
+    <div class="meta">
+      <span class="tag">第 3 课</span>
+      <span class="tag b">线性代数 · 可解性</span>
+      <span class="tag c">50 分钟 · 可拆两天</span>
+    </div>
+    <h1>秩与方程组：什么时候有解</h1>
+    <p class="sub">第 2 课说矩阵是「搬动空间的机器」。这一课问它一个更狠的问题——<b>给一个目标点，机器能不能把它搬过来</b>。</p>
+    <div class="goal">
+      <b>学完你能：</b>把 <span class="mono">Ax = b</span> 读成「b 在不在两列的拼法里」；用秩判断方程组是<b>唯一解 / 无解 / 无穷多解</b>；说出秩的三种等价说法；写出通解 <span class="mono">x = x_p + t·n</span>；用 numpy 的 <span class="mono">matrix_rank</span> 和 <span class="mono">lstsq</span> 当场验证。
+    </div>
+  </header>
+
+  <section>
+    <h2><span class="n">1</span>先从一个真实问题开始</h2>
+    <p class="big">你在调一杯咖啡：浓缩倒了 <span class="math">x</span> 毫升、牛奶倒了 <span class="math">y</span> 毫升。你手上有两个读数——总重量、总热量——能不能反推出各倒了多少？</p>
+    <p>两个未知数、两个读数，直觉上够了。写成两条式子：</p>
+    <div class="eq">x + y = 60　　2x + 3y = 150</div>
+    <p>解出来 x = 30、y = 30。<b>唯一解</b>，两个读数各管一条信息。</p>
+    <p>但换个情况：假设第二台秤称的其实就是「总重量 × 2」，那两条式子变成：</p>
+    <div class="eq">x + y = 60　　2x + 2y = 120</div>
+    <p>这两条说的是<b>同一句话</b>。x = 10、y = 50 满足；x = 40、y = 20 也满足。你倒了两杯完全不同的咖啡，读数一模一样。</p>
+    <div class="quote">
+      <b>注意这里发生了什么：</b>系统不是「算不出来」，而是<b>第二个读数没带来任何新信息</b>。<br>
+      一个系统给不出唯一答案，原因只有两种：读数互相重复（信息不够），或者读数互相矛盾（信息打架）。区分这两种情况的那个数，叫<b>秩</b>。
+    </div>
+    <p>再补一句现实里的意思：你在做实验、做回归、做传感器融合时，如果两路信号其实在测同一件事，再加一路也不会让结果更确定——这就是「秩不够」。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span>直觉：同一件事，两种看法</h2>
+    <p>下面这张图能切换两种看法，说的是同一个方程组。</p>
+
+    <div class="fig">
+      <svg id="fig" viewBox="40 0 380 340" role="img" aria-label="方程组的行看法与列看法交互图">
+        <defs>
+          <clipPath id="clip"><rect x="40" y="0" width="380" height="340"/></clipPath>
+          <marker id="ah-r" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 z" fill="#9f1239"/></marker>
+          <marker id="ah-b" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 z" fill="#1d4ed8"/></marker>
+          <marker id="ah-g" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 z" fill="#0d6f6a"/></marker>
+        </defs>
+        <g id="scene" clip-path="url(#clip)"></g>
+      </svg>
+      <div class="modebar">
+        <button id="mCol" class="on">列的看法（拼出 b）</button>
+        <button id="mRow">行的看法（两条线）</button>
+      </div>
+      <div class="readout">
+        <span class="pill">det = <b id="vdet">−2</b></span>
+        <span class="pill">秩 = <b id="vrank">2</b></span>
+        <span class="pill" id="vcond">cond = 14.9</span>
+        <span class="pill ok" id="vstat">唯一解</span>
+      </div>
+      <div class="ctrls">
+        <div class="row"><b>a</b><input id="sa" type="range" min="-2" max="2" step="0.01" value="1"><span class="v" id="va">1</span></div>
+        <div class="row"><b>b</b><input id="sb" type="range" min="-2" max="2" step="0.01" value="2"><span class="v" id="vb">2</span></div>
+        <div class="row"><b>c</b><input id="sc" type="range" min="-2" max="2" step="0.01" value="3"><span class="v" id="vc">3</span></div>
+        <div class="row"><b>d</b><input id="sd" type="range" min="-2" max="2" step="0.01" value="4"><span class="v" id="vd">4</span></div>
+        <div class="row"><b>p</b><input id="sp" type="range" min="-5" max="5" step="0.05" value="5"><span class="v" id="vp">5</span></div>
+        <div class="row"><b>q</b><input id="sq" type="range" min="-5" max="5" step="0.05" value="11"><span class="v" id="vq">11</span></div>
+      </div>
+      <div class="presets">
+        <button data-s="1,2,3,4,5,11">唯一解</button>
+        <button data-s="1,2,2,4,3,6">无穷多解</button>
+        <button data-s="1,2,2,4,3,7">无解</button>
+        <button data-s="1,2,2,4.02,3,7">近乎平行</button>
+      </div>
+      <div class="cap">矩阵 <span class="mono">[[a, b], [c, d]]</span>，目标 <span class="mono">b = (p, q)</span>。红箭头是第一列 (a, c)，蓝箭头是第二列 (b, d)，绿箭头是目标 b。</div>
+    </div>
+
+    <p><b>列的看法（先看这个）</b>：把 <span class="math">Ax = b</span> 读成</p>
+    <div class="eq">x₁·(第一列) + x₂·(第二列) = b</div>
+    <p>——你要用两列当配料，按系数 <span class="math">x₁, x₂</span> 配出一杯正好等于 b 的饮料。<b>配得出来，就有解；配不出来，就无解。</b>两列能配出的所有点的集合，叫<b>列空间</b>。</p>
+    <p><b>行的看法</b>：每条方程是一条直线，解就是交点。两条线相交于一点 = 唯一解；两条线平行 = 无解；两条线重合 = 无穷多解。</p>
+    <p>两种看法是同一件事的两面：<b>行平行</b> ⟺ 两行成比例 ⟺ <b>两列也成比例</b> ⟺ 列空间被压成一条线 ⟺ 秩 &lt; 2。自己拖「近乎平行」那组数看一遍，比背十遍强。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span>秩：这个矩阵到底有几个独立方向</h2>
+    <p>秩（rank）的一句话定义：<b>矩阵里真正互相独立的列有几个</b>。不独立的列，只是别人乘个倍数的结果，它带不来新信息。</p>
+    <p>三种说法完全等价，做题时随便挑最方便的那个：</p>
+    <table>
+      <tr><th>说法</th><th>怎么看出来</th></tr>
+      <tr><td>独立列的个数</td><td>一列能不能写成其他列的线性组合；能，它就白占位置</td></tr>
+      <tr><td>列空间的维数</td><td>两列能配出的点集：整个平面（2 维）还是一条线（1 维）</td></tr>
+      <tr><td>消元后非零行的个数</td><td>高斯消元把成比例的方程消掉，剩几行就是几</td></tr>
+    </table>
+    <p>对 2×2 的矩阵，还有一种最快的算法：<b>看行列式</b>。</p>
+    <div class="eq">det ≠ 0 ⟺ 秩 = 2（满秩）　　det = 0 ⟺ 秩 ≤ 1（亏秩）</div>
+    <p>第 2 课里 det 的读法是「面积放大几倍」；现在它多了一个读法：<b>det = 0 说明这个变换把平面压扁了，信息丢了，所以回不去</b>——回不去就是不可逆，不可逆就是秩不够。</p>
+    <div class="quote">
+      <b>为什么行列式只对 2×2、3×3 好使：</b>因为方阵才有行列式。真实数据是 1000 行 × 5 列的矩阵，根本没有 det，但<b>秩一直存在</b>。<br>
+      判断「够不够信息」的通用工具是秩，不是行列式。这也是为什么 numpy 里 <span class="mono">matrix_rank</span> 比 <span class="mono">det</span> 更常用。
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">4</span>三种结局，一张表说完</h2>
+    <p>设 A 是 2×2，<span class="math">Ax = b</span>。把所有情况列全，只有三种：</p>
+    <table>
+      <tr><th>det</th><th>秩</th><th>b 在哪</th><th>结局</th></tr>
+      <tr><td>≠ 0</td><td>2</td><td>整个平面里任意一点都够得着</td><td><b>唯一解</b></td></tr>
+      <tr><td>0</td><td>1</td><td>b 正好落在那条列空间直线上</td><td><b>无穷多解</b>（一维的一整条线）</td></tr>
+      <tr><td>0</td><td>1</td><td>b 不在那条直线上</td><td><b>无解</b>——只能退而求「最接近」</td></tr>
+    </table>
+    <p>第三行是整门课后半段的主角：<b>b 落不到列空间里，问题本身就没有精确答案</b>。这时候不是硬凑，而是把 b 投影进去，取投影点对应的解——那就是下一课的最小二乘。</p>
+
+    <h3>拿一个亏秩的例子算到底</h3>
+    <p>取 A = [[1, 2], [2, 4]]，两列 (1, 2) 和 (2, 4) 是同一方向的，秩 = 1，列空间就是直线 <span class="math">y = 2x</span>。</p>
+    <p><b>先试 b = (3, 6)</b>：(3, 6) 正好在 y = 2x 上，所以有解，而且不止一个。numpy 的 <code>solve</code> 会直接报错（矩阵不可逆），<code>lstsq</code> 会还给你一个解 (0.6, 1.2)。但它只是<b>其中一个</b>——所有解是：</p>
+    <div class="eq">x = (0.6, 1.2) + t·(2, −1)</div>
+    <p>代进去验算：A·(0.6 + 2t, 1.2 − t) = (0.6 + 2t) + 2(1.2 − t) 的第一行 = 0.6 + 2t + 2.4 − 2t = 3 ✓，第二行同理 = 6 ✓。<b>t 取任何值都成立</b>。向量 (2, −1) 就是「被压没了的方向」——它满足 A·n = 0，叫<b>零空间</b>。</p>
+    <p><b>再试 b = (3, 7)</b>：(3, 7) 不在那条线上（因为 7 ≠ 2×3），所以<b>无解</b>。这时 <code>solve</code> 报错，<code>lstsq</code> 给你最接近的那一点：投影到 (3.4, 6.8)，残差 (−0.4, 0.2)，长度 0.4472。</p>
+    <div class="quote">
+      <b>一句话记法：</b>解 = 特解 + 零空间的任意组合。<br>
+      齐次方程 <span class="math">Ax = 0</span> 永远有解（把 x 全取 0 就行）；所以「解不唯一」永远来自「零空间不只有 0」。
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">5</span>工具表：这一课只留五条</h2>
+    <table>
+      <tr><th>要干的事</th><th>式子 / 函数</th><th>说明</th></tr>
+      <tr><td>有几个独立方向</td><td class="mono">np.linalg.matrix_rank(A)</td><td>通用，任意形状的矩阵都能用</td></tr>
+      <tr><td>2×2 快速判断</td><td class="mono">det = ad − bc</td><td>只对方阵；0 就是亏秩</td></tr>
+      <tr><td>解唯一方程</td><td class="mono">np.linalg.solve(A, b)</td><td>det = 0 时抛 LinAlgError，不是静默给错答案</td></tr>
+      <tr><td>无解 / 不唯一时</td><td class="mono">np.linalg.lstsq(A, b)</td><td>总是给一个解：最小二乘 + 最小范数</td></tr>
+      <tr><td>通解</td><td class="mono">x = x_p + t·n</td><td>n 是零空间的基，t 任意</td></tr>
+    </table>
+    <p class="small">注意 <span class="mono">lstsq</span> 的「最小范数」：当有无穷多解时，它给你所有解里长度最小的那个。所以上面对 b = (3, 6)，它返回 (0.6, 1.2) 而不是别的。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">6</span>动手：10 分钟，用 numpy 验证</h2>
+<pre><span class="c"># 1. 满秩：有唯一解</span>
+<span class="k">import</span> numpy <span class="k">as</span> np
+A = np.array([[<span class="s">1</span>, <span class="s">2</span>], [<span class="s">3</span>, <span class="s">4</span>]])
+<span class="k">print</span>(np.linalg.det(A))                 <span class="c"># -2.0</span>
+<span class="k">print</span>(np.linalg.solve(A, [<span class="s">5</span>, <span class="s">11</span>]))     <span class="c"># [1. 2.]</span>
+
+<span class="c"># 2. 亏秩：两列成比例</span>
+B = np.array([[<span class="s">1</span>, <span class="s">2</span>], [<span class="s">2</span>, <span class="s">4</span>]])
+<span class="k">print</span>(np.linalg.det(B))                 <span class="c"># 0.0</span>
+<span class="k">print</span>(np.linalg.matrix_rank(B))         <span class="c"># 1</span>
+
+<span class="c"># 3. 这个 b 在列空间里吗？</span>
+<span class="k">for</span> b <span class="k">in</span> ([<span class="s">3</span>, <span class="s">6</span>], [<span class="s">3</span>, <span class="s">7</span>]):
+    x, res, rank, _ = np.linalg.lstsq(B, b, rcond=<span class="k">None</span>)
+    r = np.array(b) - B @ x
+    <span class="k">print</span>(b, <span class="s">"解"</span>, x, <span class="s">"投影"</span>, B @ x, <span class="s">"残差长度"</span>, round(<span class="k">float</span>(np.linalg.norm(r)), <span class="s">4</span>))
+
+<span class="c"># 4. 零空间：找一个 A·n = 0 的 n</span>
+n = np.array([<span class="s">2</span>, <span class="s">-1</span>])
+<span class="k">print</span>(B @ n)                            <span class="c"># [0. 0.]</span>
+
+<span class="c"># 5. 近乎平行：det 很小但非 0，看条件数</span>
+C = np.array([[<span class="s">1</span>, <span class="s">1</span>], [<span class="s">1</span>, <span class="s">1.0001</span>]])
+<span class="k">print</span>(np.linalg.cond(C))                <span class="c"># 约 40002 —— 病态</span></pre>
+    <p>跑完做三件事（比读代码重要）：</p>
+    <p>① 把第 3 段里的 <span class="mono">[3, 7]</span> 改成 <span class="mono">[3, 6]</span>，看残差长度从 0.4472 变成 0——<b>残差为 0 就是「有精确解」的数值判据</b>。<br>
+    ② 把 B 改成 [[1, 2], [1, 2.0001]]，看 <span class="mono">matrix_rank</span> 还是 2，但 condition number 炸了——<b>秩说「够」，条件数说「勉强够」</b>。<br>
+    ③ 打印 <span class="mono">B @ np.array([2, -1])</span>，确认零空间方向真的被压成 0。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">7</span>练习：三道，做完对答案</h2>
+
+    <div class="ex">
+      <div class="q"><span class="qn">1</span><span>方程组 x + 2y = 3、2x + 4y = 7。先判断有没有解，再算秩，最后求最小二乘解与残差长度。</span></div>
+      <div class="hint">第二行是不是第一行的整数倍？差在哪？</div>
+      <details><summary>对答案</summary><div class="ans">
+        <b>无解。</b>
+        <span class="step">第二式 = 2×第一式，但右边 7 ≠ 2×3 = 6——两条平行线，不重合，所以没有交点。</span>
+        <span class="step">矩阵 [[1, 2], [2, 4]] 的 det = 0，秩 = 1（列空间是一条线）。</span>
+        <b>最小二乘解 x ≈ (0.68, 1.36)</b>，投影 (3.4, 6.8)，残差 (−0.4, 0.2)，长度 0.4472。
+        <span class="step">注意 a·b/(a·a) = (3+14)/5 = 3.4，所以投影是 3.4×(1, 2) = (3.4, 6.8)——和下一课的投影公式提前对上了。</span>
+      </div></details>
+    </div>
+
+    <div class="ex">
+      <div class="q"><span class="qn">2</span><span>A = [[1, 2, 3], [2, 4, 6], [1, 1, 1]]。它的秩是多少？Ax = 0 的解空间是几维？写出一个非零解。</span></div>
+      <div class="hint">第二行是第一行的 2 倍，这一行白占位置。</div>
+      <details><summary>对答案</summary><div class="ans">
+        <b>秩 = 2</b>（3 行里只有 2 行独立）。
+        <span class="step">解空间维数 = 未知数个数 − 秩 = 3 − 2 = 1，所以是一条线。</span>
+        <b>非零解 n = (1, −2, 1)</b>。
+        <span class="step">验算：1 − 4 + 3 = 0；2 − 8 + 6 = 0；1 − 2 + 1 = 0 ✓。任何 t·(1, −2, 1) 都是解。</span>
+      </div></details>
+    </div>
+
+    <div class="ex">
+      <div class="q"><span class="qn">3</span><span>（编程）四点 (0,1)、(1,2)、(2,2)、(3,4) 拟合一条直线 y = w₀ + w₁x。用 lstsq 求 w，并报残差长度。这四个点在同一条直线上吗？</span></div>
+      <div class="hint">构造 A = 每行 [1, x]，b = 每行的 y。</div>
+      <details><summary>对答案</summary><div class="ans">
+        <b>w ≈ (0.9, 0.9)</b>，即 y ≈ 0.9 + 0.9x，残差长度 ≈ 0.8367。
+        <span class="step">不在同一条线上——如果是，残差长度会是 0。所以这个方程组 <b>无精确解</b>，lstsq 求的是最近的那条线。</span>
+        <span class="step">这就是线性回归的雏形：4 个方程、2 个未知数，超定系统（方程比未知数多），几乎注定无解，于是退而求最小二乘。</span>
+      </div></details>
+    </div>
+  </section>
+
+  <section>
+    <div class="next">
+      <h3>明日问题（带着它睡）</h3>
+      <p>刚才 b = (3, 7) 落不到列空间里，我们「投影」进去了。可是投影点是怎么算出来的？<span class="q">为什么在无穷多条候选直线里，垂着落下去的那一条最好？</span>——这就是最小二乘，也是整条路线里线代和微积分第一次握手。</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="recall">
+      <b>收尾：合上这一页，先自己答这四问，再回看。</b>
+      <ol>
+        <li>秩的三种说法分别是什么？为什么它们等价？</li>
+        <li>det = 0 时，方程组为什么只可能是「无解」或「无穷多解」，不能是「唯一解」？</li>
+        <li>为什么齐次方程 Ax = 0 永远有解？「解不唯一」的真正原因是什么？</li>
+        <li>「没有精确解」和「病态但勉强可解」，是同一件事吗？各用什么数判断？</li>
+      </ol>
+      <details><summary>对答案</summary><div class="ans">
+        <b>1.</b> 独立列数 = 列空间维数 = 消元后非零行数。三者都在数「这个矩阵真正提供几个独立方向」——一列/一行能由其他列/行拼出来，它就不贡献新方向，消元时会被消成 0。
+        <span class="step">2×2 时等价于 det 是否为 0。</span>
+        <b>2.</b> det = 0 说明变换把方向压没了，两列共线，列空间从整个平面塌成一条线。b 要么正好在那条线上（此时有无穷多个系数能拼出它），要么不在（怎么拼都拼不出来）。<b>中间那个「恰好唯一」的落脚点已经被压掉了</b>，所以不存在唯一解。
+        <b>3.</b> x = 0 代入永远成立——零空间至少含原点。所以「唯一解」的意思只是「零空间只有一个点」；一旦零空间里还有别的向量 n，x_p + t·n 就全是解，解集必然放大成一条线（或整个子空间）。
+        <b>4.</b> 不是。前者是<b>结构问题</b>：b 不在列空间里，数学上就没有精确答案，用秩 / 残差长度判断；后者是<b>数值问题</b>：解存在且唯一，但两列几乎平行，输入的微小误差会被放大几万倍，用条件数 <span class="mono">np.linalg.cond</span> 判断。
+        <span class="step">一句话：秩不够是「没答案」，条件数爆炸是「有答案但别信」。两者都会让 <span class="mono">solve</span> 的结果难看，但原因完全不同。</span>
+      </div></details>
+    </div>
+  </section>
+
+  <div class="pager">
+    <a href="lesson-02.html">← 第 2 课：矩阵</a>
+    <span style="color:var(--muted)">第 4 课：最小二乘与投影（待解锁）</span>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var S=38, OX=210, OY=170, NS='http://www.w3.org/2000/svg';
+  var A=[1,2,3,4], T=[5,11], mode='col';
+  var scene=document.getElementById('scene');
+
+  function E(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
+  function P(x,y){return [OX+x*S, OY-y*S];}
+  function ln(x1,y1,x2,y2,st){
+    var p=P(x1,y1), q=P(x2,y2), a={stroke:'#000','stroke-width':1};
+    for(var k in st)a[k]=st[k];
+    a.x1=p[0];a.y1=p[1];a.x2=q[0];a.y2=q[1];
+    scene.appendChild(E('line',a));
+  }
+  function arrow(x,y,color,marker,label){
+    var len=Math.hypot(x,y), p=P(0,0), q=P(x,y), t;
+    if(len<0.06){
+      scene.appendChild(E('circle',{cx:p[0],cy:p[1],r:4,fill:color}));
+      return;
+    }
+    scene.appendChild(E('line',{x1:p[0],y1:p[1],x2:q[0],y2:q[1],stroke:color,'stroke-width':2.6,'marker-end':'url(#'+marker+')'}));
+    var ux=x/len, uy=y/len;
+    t=E('text',{x:q[0]+13*ux,y:q[1]-13*uy+4,fill:color,'font-size':12.5,'font-weight':700,
+      'text-anchor':'middle','font-family':'Times New Roman, serif'});
+    t.textContent=label; scene.appendChild(t);
+  }
+  function label(x,y,txt,color,anchor){
+    var p=P(x,y), t=E('text',{x:p[0],y:p[1],fill:color,'font-size':12.5,'font-weight':700,
+      'text-anchor':anchor||'middle','font-family':'Times New Roman, serif'});
+    t.textContent=txt; scene.appendChild(t);
+  }
+  function grid(){
+    for(var i=-6;i<=6;i++){
+      ln(i,-6,i,6,{stroke:'#e9e3d5','stroke-width':1});
+      ln(-6,i,6,i,{stroke:'#e9e3d5','stroke-width':1});
+    }
+    ln(-6,0,6,0,{stroke:'#8a8474','stroke-width':1.6});
+    ln(0,-6,0,6,{stroke:'#8a8474','stroke-width':1.6});
+  }
+  function state(){
+    var a=A[0],b=A[1],c=A[2],d=A[3],p=T[0],q=T[1];
+    var det=a*d-b*c;
+    var n1=Math.hypot(a,c), n2=Math.hypot(b,d);
+    var rank = (Math.abs(det)>1e-9 && n1>1e-9 && n2>1e-9) ? 2 : ((n1>1e-9||n2>1e-9)?1:0);
+    return {a:a,b:b,c:c,d:d,p:p,q:q,det:det,rank:rank,n1:n1,n2:n2};
+  }
+
+  // 2×2 的条件数：AᵀA 的特征值开根号之比
+  function cond2(s){
+    var a=s.a,b=s.b,c=s.c,d=s.d,e1=a*a+c*c, e2=a*b+c*d, e3=b*b+d*d;
+    var tr=e1+e3, det=e1*e3-e2*e2;
+    var disc=tr*tr-4*det;
+    if(disc<0) disc=0;
+    var l1=(tr+Math.sqrt(disc))/2, l2=(tr-Math.sqrt(disc))/2;
+    if(l2<1e-12) return Infinity;
+    return Math.sqrt(l1/l2);
+  }
+
+  function drawCol(s){
+    grid();
+    var c1=[s.a,s.c], c2=[s.b,s.d], t=[s.p,s.q];
+    if(s.rank===2){
+      var x1=(s.p*s.d - s.b*s.q)/s.det, x2=(s.a*s.q - s.p*s.c)/s.det;
+      if(Math.max(Math.abs(x1),Math.abs(x2))<=8){
+        // 平行四边形：x1*c1 与 x2*c2
+        var m1=[x1*c1[0], x1*c1[1]], m2=[x2*c2[0], x2*c2[1]];
+        ln(0,0,m1[0],m1[1],{stroke:'#c88', 'stroke-width':1.4,'stroke-dasharray':'5 4'});
+        ln(m1[0],m1[1],t[0],t[1],{stroke:'#99a', 'stroke-width':1.4,'stroke-dasharray':'5 4'});
+        ln(0,0,m2[0],m2[1],{stroke:'#99a','stroke-width':1.4,'stroke-dasharray':'5 4'});
+        ln(m2[0],m2[1],t[0],t[1],{stroke:'#c88','stroke-width':1.4,'stroke-dasharray':'5 4'});
+        label(m1[0]*1.05, m1[1]*1.05+0.25, x1.toFixed(2)+'·c₁', '#a16207');
+        label(m2[0]*1.05+0.35, m2[1]*1.05, x2.toFixed(2)+'·c₂', '#a16207');
+      } else {
+        label(-5.4, 4.7, '解跑到图外：x ≈ ('+x1.toFixed(1)+', '+x2.toFixed(1)+')', '#a16207', 'start');
+      }
+      arrow(c1[0],c1[1],'#9f1239','ah-r','c\u2081');
+      arrow(c2[0],c2[1],'#1d4ed8','ah-b','c\u2082');
+      arrow(t[0],t[1],'#0d6f6a','ah-g','b');
+    } else if(s.rank===1){
+      var base = s.n1>1e-9 ? c1 : c2;
+      var bl=Math.hypot(base[0],base[1]);
+      var ux=base[0]/bl, uy=base[1]/bl;
+      ln(-7*ux,-7*uy,7*ux,7*uy,{stroke:'#e0b8ac','stroke-width':1.6});
+      label(6.2*ux, 6.2*uy+0.35, '\u5217\u7a7a\u95f4', '#9f1239');
+      var coef=(t[0]*base[0]+t[1]*base[1])/(bl*bl);
+      var pr=[coef*base[0], coef*base[1]];
+      var res=Math.hypot(t[0]-pr[0], t[1]-pr[1]);
+      ln(pr[0],pr[1],t[0],t[1],{stroke:'#a16207','stroke-width':2,'stroke-dasharray':'4 3'});
+      scene.appendChild(E('circle',{cx:P(pr[0],pr[1])[0],cy:P(pr[0],pr[1])[1],r:4,fill:'#a16207'}));
+      label((pr[0]+t[0])/2+0.3,(pr[1]+t[1])/2+0.35,'|r|='+res.toFixed(3),'#a16207');
+      arrow(base[0],base[1],'#9f1239','ah-r','c\u2081');
+      if(s.n2>1e-9) arrow(c2[0],c2[1],'#1d4ed8','ah-b','c\u2082');
+      arrow(t[0],t[1],'#0d6f6a','ah-g','b');
+    }
+  }
+
+  function drawRow(s){
+    grid();
+    // 行 1: a x + b y = p；行 2: c x + d y = q
+    function line(A1,B1,C1,color,labelTxt){
+      var pts=[], k;
+      if(Math.abs(B1) > Math.abs(A1)){
+        for(k=-6;k<=6;k+=0.25){ pts.push([k, (C1-A1*k)/B1]); }
+      } else {
+        for(k=-6;k<=6;k+=0.25){ pts.push([(C1-B1*k)/A1, k]); }
+      }
+      var d=pts.map(function(pt,i){ return (i?'L':'M')+P(pt[0],pt[1])[0]+' '+P(pt[0],pt[1])[1]; }).join(' ');
+      scene.appendChild(E('path',{d:d,fill:'none',stroke:color,'stroke-width':2.2,'stroke-linecap':'round'}));
+      var e=pts[pts.length-1], st=pts[pts.length-2];
+      label(e[0],e[1]-0.3,labelTxt,color,'end');
+    }
+    if(!(s.a===0&&s.b===0)) line(s.a,s.b,s.p,'#9f1239','\u884c1');
+    if(!(s.c===0&&s.d===0)) line(s.c,s.d,s.q,'#1d4ed8','\u884c2');
+    if(s.rank===2){
+      var x=(s.p*s.d - s.b*s.q)/s.det, y=(s.a*s.q - s.p*s.c)/s.det;
+      var pt=P(x,y);
+      scene.appendChild(E('circle',{cx:pt[0],cy:pt[1],r:5.5,fill:'#0d6f6a',stroke:'#fff','stroke-width':2}));
+      label(x, y-0.45, '('+x.toFixed(2)+', '+y.toFixed(2)+')', '#0d6f6a');
+    } else if(s.rank===1){
+      label(-5.2, 4.6, '\u4e24\u6761\u7ebf\u5e73\u884c\u6216\u91cd\u5408', '#a16207', 'start');
+    }
+  }
+
+  function sync(){
+    A=[+sa.value,+sb.value,+sc.value,+sd.value];
+    T=[+sp.value,+sq.value];
+    va.textContent=A[0]; vb.textContent=A[1]; vc.textContent=A[2]; vd.textContent=A[3];
+    vp.textContent=T[0].toFixed(2); vq.textContent=T[1].toFixed(2);
+    var s=state();
+    vdet.textContent=(Math.abs(s.det)<1e-9?'0':s.det.toFixed(2));
+    vrank.textContent=s.rank;
+    var inSpan=true;
+    if(s.rank===1){
+      var base = s.n1>1e-9?[s.a,s.c]:[s.b,s.d];
+      var coef=(T[0]*base[0]+T[1]*base[1])/(base[0]*base[0]+base[1]*base[1]);
+      var res=Math.hypot(T[0]-coef*base[0], T[1]-coef*base[1]);
+      inSpan = res < 1e-6;
+    }
+    if(s.rank===2){
+      var cd=cond2(s);
+      vcond.textContent = (cd===Infinity) ? 'cond = ∞' : ('cond = '+(cd<100?cd.toFixed(1):Math.round(cd)));
+      if(cd>100){ vstat.textContent='唯一解 · 病态'; vstat.className='pill mid'; }
+      else { vstat.textContent='唯一解'; vstat.className='pill ok'; }
+    } else if(s.rank===1){
+      vcond.textContent='cond = ∞';
+      vstat.textContent = inSpan ? '无穷多解' : '无解';
+      vstat.className = inSpan ? 'pill mid' : 'pill warn';
+    } else {
+      vcond.textContent='cond = ∞';
+      vstat.textContent = (T[0]===0&&T[1]===0) ? '无穷多解' : '无解';
+      vstat.className='pill warn';
+    }
+    scene.innerHTML='';
+    if(mode==='col') drawCol(s); else drawRow(s);
+  }
+
+  ['sa','sb','sc','sd','sp','sq'].forEach(function(id){
+    document.getElementById(id).addEventListener('input',sync);
+  });
+
+  document.querySelectorAll('.presets button').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var m=btn.dataset.s.split(',').map(Number);
+      sa.value=m[0]; sb.value=m[1]; sc.value=m[2]; sd.value=m[3]; sp.value=m[4]; sq.value=m[5];
+      sync();
+      document.querySelectorAll('.presets button').forEach(function(b){b.classList.remove('on');});
+      btn.classList.add('on');
+    });
+  });
+
+  mCol.addEventListener('click',function(){mode='col';mCol.classList.add('on');mRow.classList.remove('on');sync();});
+  mRow.addEventListener('click',function(){mode='row';mRow.classList.add('on');mCol.classList.remove('on');sync();});
+
+  var qs=new URLSearchParams(location.search).get('s');
+  if(qs){
+    var m=qs.split(',').map(Number);
+    if(m.length===6 && m.every(function(v){return !isNaN(v);})){
+      sa.value=m[0]; sb.value=m[1]; sc.value=m[2]; sd.value=m[3]; sp.value=m[4]; sq.value=m[5];
+    }
+  }
+  sync();
+})();
+</script>
+</body>
+</html>
