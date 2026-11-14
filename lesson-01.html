@@ -105,6 +105,14 @@
   .recall ol{margin:8px 0 0 20px}
   .recall li{margin-bottom:5px;color:#3a475c}
 
+  /* 收尾四问：点开对答案 */
+  .recall .qa{margin:12px 0 0;padding-left:22px}
+  .recall .qa>li{margin-bottom:6px;color:#3a475c}
+  .recall .qa>li::marker{color:#0d6f6a;font-weight:800;font-family:var(--mono);font-size:13px}
+  .recall details{margin-top:6px;border-top:1px dashed #c9dcd7;padding-top:8px}
+  .recall summary{color:#0b5d59;font-size:15px;line-height:1.6}
+  .recall details .ans{font-size:14.5px;color:#33415a;line-height:1.78}
+
   @media (max-width:640px){
     body{font-size:15px}
     .wrap{padding:0 16px 70px}
@@ -434,13 +442,62 @@ s3 = np.array([0.7, 0.1, 0.9, 0.2])</pre>
   </section>
 
   <section>
+    <h2><span class="n">9</span>收尾：四问自测，先答再点开</h2>
     <div class="recall">
-      <b>收尾：合上这一页，先自己答这四问，再回看。</b>
-      <ol>
-        <li>为什么内积可以写成「对应相乘再相加」？</li>
-        <li>余弦相似度里为什么要除以两个长度？</li>
-        <li>什么情况下该用距离而不是余弦？</li>
-        <li>把向量 b 放大 3 倍，夹角会变吗？为什么？</li>
+      <b>合上这一页，先自己答，再逐条点开对。</b>四问都能一口气说出「为什么」，这一课才算过；有一问答不上来，明天先补它。
+      <ol class="qa">
+
+        <li>
+          <details>
+            <summary>为什么内积可以写成「对应相乘再相加」？</summary>
+            <div class="ans">
+              <b>因为基向量两两垂直、长度都是 1，各维互不干扰。</b>内积对加法可分配，把 b 拆成 b<sub>1</sub>e<sub>1</sub> + b<sub>2</sub>e<sub>2</sub> + … 代进去展开，所有 e<sub>i</sub>·e<sub>j</sub>（i ≠ j）全是 0，交叉项全灭，只剩同维的 a<sub>i</sub>b<sub>i</sub>。
+              <span class="step">换个算法也对得上：|a − b|² 按坐标展开是 Σa<sub>i</sub>² + Σb<sub>i</sub>² − 2Σa<sub>i</sub>b<sub>i</sub>，按几何是 |a|² + |b|² − 2|a||b|cos θ，两式一比，交叉项只能是 Σa<sub>i</sub>b<sub>i</sub>。</span>
+              <span class="step">例子：(3, 4)·(1, 2) = 3×1 + 4×2 = <b>11</b>；|a| = 5、|b| = √5，11 ÷ (5√5) ≈ <b>0.984</b>，θ ≈ 10.3°，和几何算出来的一致。</span>
+              <span class="step">坑：只在<b>标准正交基</b>下才是「逐项相乘」。换一组斜的基，公式要变成 a<sup>T</sup>Gb（G 是这组基的内积表）——协方差、马氏距离里那个 G 就是它。</span>
+            </div>
+          </details>
+        </li>
+
+        <li>
+          <details>
+            <summary>余弦相似度里为什么要除以两个长度？</summary>
+            <div class="ans">
+              <b>内积把两个长度乘进去了，余弦要把它们除回来。</b>a·b = |a||b|cos θ，长度是「音量旋钮」；除以 |a||b|，旋钮拧回 1，只剩 cos θ。
+              <span class="step">等价操作：先把 a、b 都缩成单位向量 â、b̂（投到单位圆/球面上），再点积——cos θ = â·b̂。方向没动，长度统一了。</span>
+              <span class="step">为什么除两个：只除 |b| 得到 |a|cos θ，那是投影长度，a 一变长它就跟着变；相似度必须对两边都免疫，所以分子分母各除一次。</span>
+              <span class="step">数字：a = (3, 7, 8)、b = (8, 6, 9)，内积 138、cos 0.929；b 全乘 3 后内积 414，cos 仍是 <b>0.929</b>——分子的 3 和分母的 3 约掉了。</span>
+              <span class="step">代价：长度信息被扔掉。长度有时是信号（用户多活跃、词出现几次、模型多有把握），所以 attention 不归一化、只除 √d；零向量不能除。</span>
+            </div>
+          </details>
+        </li>
+
+        <li>
+          <details>
+            <summary>什么情况下该用距离而不是余弦？</summary>
+            <div class="ans">
+              <b>判据只有一条：长度是不是信息。</b>长度是噪声（活跃度、文本长短）→ 余弦；长度是信号（绝对量、位置、置信度）→ 距离。
+              <span class="step">该用距离：k-means、异常检测、「是不是同一个东西」的检索、坐标和像素、回归的输入特征、需要三角不等式的空间索引。</span>
+              <span class="step">余弦的三个盲区：① (1, 0) 和 (100, 0) 余弦 = <b>1</b>，差 99 倍却被判「完全一样」；② 全正向量有共同基线，余弦普遍虚高（晴天 vs 大悲咒 0.87）；③ 余弦不是距离，不满足三角不等式，不能直接用于靠度量剪枝的索引（KD 树）或 DBSCAN 的 eps——要用就先归一化、换成欧氏。</span>
+              <span class="step">两者其实是亲戚：两边都归一化后，欧氏距离² = 2 − 2cos θ。所以「先归一化再算距离」和余弦排序是同一件事，只是多了一个能读的「差多少」。</span>
+              <span class="step">一句：问「像不像／同一类」→ 余弦；问「差多少／是不是同一个」→ 距离。长度也要用，就把它单独做一维特征，别塞进相似度。</span>
+            </div>
+          </details>
+        </li>
+
+        <li>
+          <details>
+            <summary>把向量 b 放大 3 倍，夹角会变吗？为什么？</summary>
+            <div class="ans">
+              <b>不会变。</b>b 只是沿原方向伸长，射线方向没变；夹角由两条射线决定，跟长度无关。
+              <span class="step">代数：cos θ = a·b / (|a||b|)，b → 3b 时分子 ×3、分母 |b| 也 ×3，约掉。</span>
+              <span class="step">会变的是内积（138 → <b>414</b>，×3）和 |b|；不变的是 cos θ、θ 本身，还有 a 在 b 上的投影——投影只认方向，不认 b 多长。</span>
+              <span class="step">数字：a = (3, 7, 8)、b = (8, 6, 9)，θ ≈ <b>21.8°</b>；b 乘 3 后仍是 21.8°。</span>
+              <span class="step">反过来：乘 −3（反向）才变，θ → 180° − θ ≈ 158.2°，cos 变号 −0.929。只有缩放因子为负才改夹角。</span>
+            </div>
+          </details>
+        </li>
+
       </ol>
     </div>
   </section>
