@@ -212,7 +212,8 @@
         <button data-s="1,2,2,4,3,7">无解</button>
         <button data-s="1,2,2,4.02,3,7">近乎平行</button>
       </div>
-      <div class="cap">矩阵 <span class="mono">[[a, b], [c, d]]</span>，目标 <span class="mono">b = (p, q)</span>。红箭头是第一列 (a, c)，蓝箭头是第二列 (b, d)，绿箭头是目标 b。</div>
+      <div class="cap">矩阵 <span class="mono">[[a, b], [c, d]]</span>，目标 <span class="mono">b = (p, q)</span>。红箭头是第一列 (a, c)，蓝箭头是第二列 (b, d)，绿箭头是目标 b。<br>
+        多出来的 <b>cond</b> 是条件数：两列有多接近平行。它越大，输入的一点点误差就会被放大成解的一点点巨大偏差——点「近乎平行」，det 只剩 0.02，解直接飞到 (−97, 50)，图上会标「解跑到图外」。这就是「有答案，但别太信」。</div>
     </div>
 
     <p><b>列的看法（先看这个）</b>：把 <span class="math">Ax = b</span> 读成</p>
@@ -495,9 +496,13 @@ C = np.array([[<span class="s">1</span>, <span class="s">1</span>], [<span class
     if(!(s.c===0&&s.d===0)) line(s.c,s.d,s.q,'#1d4ed8','\u884c2');
     if(s.rank===2){
       var x=(s.p*s.d - s.b*s.q)/s.det, y=(s.a*s.q - s.p*s.c)/s.det;
-      var pt=P(x,y);
-      scene.appendChild(E('circle',{cx:pt[0],cy:pt[1],r:5.5,fill:'#0d6f6a',stroke:'#fff','stroke-width':2}));
-      label(x, y-0.45, '('+x.toFixed(2)+', '+y.toFixed(2)+')', '#0d6f6a');
+      if(Math.max(Math.abs(x),Math.abs(y))<=8){
+        var pt=P(x,y);
+        scene.appendChild(E('circle',{cx:pt[0],cy:pt[1],r:5.5,fill:'#0d6f6a',stroke:'#fff','stroke-width':2}));
+        label(x, y-0.45, '('+x.toFixed(2)+', '+y.toFixed(2)+')', '#0d6f6a');
+      } else {
+        label(-5.2, 4.6, '\u4ea4\u70b9\u5728\u5f88\u8fdc\u5904\uff1a('+x.toFixed(1)+', '+y.toFixed(1)+')', '#a16207', 'start');
+      }
     } else if(s.rank===1){
       label(-5.2, 4.6, '\u4e24\u6761\u7ebf\u5e73\u884c\u6216\u91cd\u5408', '#a16207', 'start');
     }
