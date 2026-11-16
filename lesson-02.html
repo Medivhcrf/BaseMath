@@ -46,6 +46,11 @@
   .quote{background:#fbf8f0;border:1px dashed var(--line2);border-radius:12px;padding:16px 20px;font-size:15px;color:#4a5468;margin:16px 0}
   .quote b{color:var(--amber)}
   .small{font-size:13.5px;color:var(--muted)}
+  /* 定义卡：新概念首次出现时给定义 */
+  .def{background:#f2f6fb;border:1px solid #d8e2ef;border-left:4px solid var(--blue);border-radius:0 12px 12px 0;padding:14px 18px;margin:16px 0;font-size:14.5px;color:#33415a}
+  .def .term{display:inline-block;font-weight:800;color:var(--blue);margin-right:8px;font-size:15px;letter-spacing:.02em}
+  .def .why{display:block;margin-top:7px;font-size:13.5px;color:var(--muted)}
+  .def .warn{display:block;margin-top:7px;font-size:13.5px;color:var(--rose)}
 
   /* 交互图 */
   .fig{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 16px 10px;margin:18px 0}
@@ -163,6 +168,17 @@
       <span class="br">]</span>
     </div>
     <p>所以先说结论：<em>矩阵不是一张数字表，是一台把整个空间按固定规则搬动的机器</em>。你喂它一个点，它吐出一个新点；而且同一个规则同时作用于所有点——这就是「线性」的意思：<b>原点不动，网格线变换后仍然是直线</b>。</p>
+    <div class="def">
+      <span class="term">矩阵 A（m 行 × n 列）</span>
+      一个排成矩形的数阵，写作 <span class="math">A = [[a, b], [c, d]]</span>。它有<b>三种身份</b>，本课主要用第二种：一张数据表 / 一个线性变换的坐标写法 / n 个列向量并排捆在一起。
+      <span class="why">为什么要写成数阵：这样「规则」才能被乘。「先搬一次、再搬一次」于是变成两个矩阵相乘，整条链子就能用一个矩阵表示。</span>
+    </div>
+
+    <div class="def">
+      <span class="term">线性变换 T</span>
+      一个函数 <span class="math">T: ℝⁿ → ℝᵐ</span>，满足两条：<span class="math">T(u+v) = T(u)+T(v)</span>、<span class="math">T(ku) = k·T(u)</span>。等价的一条直觉：<b>原点不动，直线还是直线，等距的点还等距</b>。
+      <span class="why">这两条合起来的意思是「不弯、不平移」。所以旋转、缩放、剪切、投影都是线性的；而「把图片往右挪 10 像素」不是（那叫仿射，要额外加一个平移向量）。</span>
+    </div>
     <div class="quote">
       <b>为什么这件事值得学：</b>你以后会遇到的「图像旋转」「数据标准化」「把 784 维压成 2 维」「神经网络的一层」，全都是这一台机器。
     </div>
@@ -277,6 +293,13 @@
     <h2><span class="n">3</span>矩阵的列，就是基向量的新家</h2>
     <p>这是这一课唯一需要真正记住的东西。先看一个事实：任何向量都能拆成两个基本方向的组合。</p>
     <div class="eq">x = (x₁, x₂) = x₁·e₁ + x₂·e₂</div>
+
+    <div class="def">
+      <span class="term">线性组合 / 基 / 基向量</span>
+      手上一组向量 <span class="math">v₁ … v_k</span> 和一组数 <span class="math">c₁ … c_k</span>，<span class="math">c₁v₁ + … + c_kv_k</span> 就叫它们的<b>线性组合</b>——按配方调一杯饮料，系数就是配方比例。<br>
+      如果平面里每个点都能用这组向量<b>唯一地</b>调出来，这组向量就叫这个平面的一组<b>基</b>，每一个叫<b>基向量</b>。最常用的一组是 <span class="math">e₁ = (1,0)、e₂ = (0,1)</span>。
+      <span class="why">「选定一组基」= 选定一种语言。坐标系就是这套语言的语法：点本身没动，换个说法而已。而矩阵的每一列，就是「原来的基向量被搬到哪儿去了」。</span>
+    </div>
     <p>其中 e₁ = (1, 0)、e₂ = (0, 1)。而线性变换有一个性质：<b>先组合再变换 = 先变换再组合</b>。于是：</p>
     <div class="eq">A·x = x₁·(A·e₁) + x₂·(A·e₂)</div>
     <p>而 A·e₁ 是什么？就是把 (1,0) 代进矩阵，得到的正好是<b>矩阵的第一列</b>；同理 A·e₂ 是<b>第二列</b>。所以：</p>
@@ -324,6 +347,13 @@
     <h2><span class="n">4</span>行列式：面积被放大了几倍</h2>
     <p>单位正方形的面积是 1。它被矩阵变换成平行四边形之后，面积变成 |det A|。所以行列式有一个非常物理的读法：</p>
     <div class="eq">det A = 面积放大倍数（带正负号，负号表示翻了面）</div>
+
+    <div class="def">
+      <span class="term">行列式 det A（只对方阵有定义）</span>
+      2×2 时 <span class="math">det A = ad − bc</span>。它的几何意义是<b>面积（三维里是体积）的放大倍数</b>，正负号负责报告「有没有翻面」。
+      <span class="why">一张表读到底：|det| &gt; 1 放大、&lt; 1 缩小、= 1 面积不变（旋转、剪切都属这类）、= 0 压扁了（不可逆，信息丢了）、&lt; 0 翻了面（像照镜子）。</span>
+      <span class="warn">det 只对方阵存在。2×3 那样的矩阵没有行列式；想知道它把「体积」变成几倍，要用奇异值（第 5 课之后会出现）。</span>
+    </div>
     <p>二阶矩阵的行列式就是一个交叉相乘再相减：</p>
     <div class="eq">det [[a, b], [c, d]] = a·d − b·c</div>
     <p>三种情况要分清：</p>
@@ -348,6 +378,11 @@
 
   <section>
     <h2><span class="n">5</span>工具表：这一课只留四条</h2>
+    <div class="def">
+      <span class="term">可逆 / 逆矩阵 A⁻¹</span>
+      如果存在 B 使得 <span class="math">BA = AB = I</span>（I 是单位矩阵：对角全 1、其余 0，相当于「什么都不做」），就称 A <b>可逆</b>，B 记作 <span class="math">A⁻¹</span>，意思是「把这次搬动原样倒回去」。
+      <span class="why">可逆 ⟺ det ≠ 0 ⟺ 没有把任何方向压扁 ⟺ 两列指向不同方向。反过来说：只要 det = 0，信息就丢了，再聪明的算法也倒不回去——这就是为什么「无解」的方程靠 det 就能看出来。</span>
+    </div>
     <table>
       <tr><th>名字</th><th>式子</th><th>什么时候用</th></tr>
       <tr><td>矩阵乘向量</td><td class="mono">A·x = x₁·col₁ + x₂·col₂</td><td>把一个点搬到新位置；算一层的输出</td></tr>

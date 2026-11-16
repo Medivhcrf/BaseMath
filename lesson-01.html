@@ -48,6 +48,11 @@
   .quote{background:#fbf8f0;border:1px dashed var(--line2);border-radius:12px;padding:16px 20px;font-size:15px;color:#4a5468;margin:16px 0}
   .quote b{color:var(--amber)}
   .small{font-size:13.5px;color:var(--muted)}
+  /* 定义卡：新概念首次出现时给定义 */
+  .def{background:#f2f6fb;border:1px solid #d8e2ef;border-left:4px solid var(--blue);border-radius:0 12px 12px 0;padding:14px 18px;margin:16px 0;font-size:14.5px;color:#33415a}
+  .def .term{display:inline-block;font-weight:800;color:var(--blue);margin-right:8px;font-size:15px;letter-spacing:.02em}
+  .def .why{display:block;margin-top:7px;font-size:13.5px;color:var(--muted)}
+  .def .warn{display:block;margin-top:7px;font-size:13.5px;color:var(--rose)}
 
   /* 交互图 */
   .fig{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 16px 10px;margin:18px 0}
@@ -199,6 +204,11 @@
     </div>
 
     <h3>看懂这张图，你就懂了内积</h3>
+    <div class="def">
+      <span class="term">范数 |a|（也叫长度、模、向量的大小）</span>
+      把每个分量平方、加起来、再开根号：<span class="math">|a| = √(a₁² + a₂² + … + aₙ²)</span>。几何上就是「这支箭有多长」——二维是勾股定理的斜边，n 维是同一件事。
+      <span class="why">顺带定义<b>单位向量</b>：长度恰好为 1 的向量，<span class="math">â = a / |a|</span>。把任何向量除以自己的长度，就得到它的「纯方向」。</span>
+    </div>
     <p>把 a 朝 b 的方向「照」过去，会在地上留下一个影子。影子的长度是：</p>
     <div class="eq">影子长度 = |a| · cos θ</div>
     <p>而 b 的长度乘以这个影子，就是内积：</p>
@@ -206,6 +216,19 @@
     <p>换个说法：<b>内积在衡量「a 有多少成分落在 b 的方向上」</b>。两根箭头几乎重合，内积最大；相互垂直，内积为 0——一点关系都没有；方向相反，内积为负。</p>
     <p>这也解释了内积为什么是「对应位置相乘再相加」：只有同方向的分量才会互相「对上」，对不上的就浪费了。</p>
     <div class="eq">a · b = a<sub>1</sub>b<sub>1</sub> + a<sub>2</sub>b<sub>2</sub> + … + a<sub>n</sub>b<sub>n</sub></div>
+
+    <div class="def">
+      <span class="term">内积 a · b（点积、标量积——同一个东西的三个名字）</span>
+      吃进两个<b>同样长</b>的向量，吐出一个<b>数</b>：<span class="math">a · b = Σᵢ aᵢbᵢ</span>。它满足交换 <span class="math">a·b = b·a</span>、自乘得平方长度 <span class="math">a·a = |a|²</span>、以及对加法和数乘都分配。
+      <span class="why">三个等价读法：对应位相乘相加（这是<b>算法</b>）／a 在 b 上的投影 × b 的长度（这是<b>几何</b>）／加权求和（这是<b>工程</b>）。三者一字不差，只是问法不同。</span>
+      <span class="warn">分清两件事：内积 <span class="math">a·b</span> 的结果是<b>数量</b>；逐元素相乘 <span class="math">a ⊙ b</span> 的结果还是<b>向量</b>。numpy 里前者是 <code>a @ b</code>，后者是 <code>a * b</code>。</span>
+    </div>
+
+    <div class="def">
+      <span class="term">正交 a ⊥ b</span>
+      约定：<span class="math">a · b = 0</span>（且两个都不是零向量）时，称 a 与 b <b>正交</b>。二维里它就是「垂直」，但这个词能一直用到 100 维、用到函数上——那里画不出图，只剩下这一条式子。
+      <span class="why">正交 = 互不干扰：提着箱子走，提的力和位移正交，不做功；一组向量两两正交，就是「每条信号只由自己那一维负责，谁也不串味」。</span>
+    </div>
   </section>
 
   <section>
@@ -335,6 +358,19 @@
     <p>距离很大，算法会判定「这两个人不像」。可他们的偏好明明一样。</p>
     <p><b>问题出在长度上：</b>长度里混进了「活跃度」这个信息。而余弦相似度把长度除掉了，只看方向：</p>
     <div class="eq">cos(A, B) = (A·B) / (|A|·|B|) = 1</div>
+
+    <div class="def">
+      <span class="term">余弦相似度 cos(a, b)</span>
+      <span class="math">cos(a,b) = a·b / (|a|·|b|)</span>，就是两支箭夹角的余弦。取值范围 <b>−1 到 1</b>：1 完全同向、0 正交（毫无关系）、−1 完全反向。
+      <span class="why">它只留方向、抹掉长度，所以「看了 20 部的人」和「看了 2 部但口味一样的人」相似度仍是 1。等价的实现：先把两边都归一化成单位向量，再做一次内积——<code>cos = â · b̂</code>。</span>
+      <span class="warn">它不是角度本身，是角度的余弦；0.5 也不能读成「50% 像」，−1 到 1 不是 0 到 1 的百分比。</span>
+    </div>
+
+    <div class="def">
+      <span class="term">欧氏距离 |a − b|（L2 距离）</span>
+      <span class="math">|a − b| = √Σᵢ (aᵢ − bᵢ)²</span>：两个点之间那条直线有多长。它<b>含长度</b>，所以会被「量级」污染。
+      <span class="why">分工：问「差多少、要不要靠近」用距离；问「像不像、是不是一类」用余弦。两者不是替代关系，是两种问题。</span>
+    </div>
     <p>完全同向，相似度 1，判对了。</p>
     <div class="quote">
       <b>记住这个分工：</b>长度代表「程度／活跃度／量级」，方向代表「结构／偏好／类型」。<br>

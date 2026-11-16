@@ -46,6 +46,11 @@
   .quote{background:#fbf8f0;border:1px dashed var(--line2);border-radius:12px;padding:16px 20px;font-size:15px;color:#4a5468;margin:16px 0}
   .quote b{color:var(--amber)}
   .small{font-size:13.5px;color:var(--muted)}
+  /* 定义卡：新概念首次出现时给定义 */
+  .def{background:#f2f6fb;border:1px solid #d8e2ef;border-left:4px solid var(--blue);border-radius:0 12px 12px 0;padding:14px 18px;margin:16px 0;font-size:14.5px;color:#33415a}
+  .def .term{display:inline-block;font-weight:800;color:var(--blue);margin-right:8px;font-size:15px;letter-spacing:.02em}
+  .def .why{display:block;margin-top:7px;font-size:13.5px;color:var(--muted)}
+  .def .warn{display:block;margin-top:7px;font-size:13.5px;color:var(--rose)}
   ul,ol{margin:10px 0 14px;padding-left:22px}
   li{margin-bottom:6px;color:#3a475c}
 
@@ -232,9 +237,21 @@
         多出来的 <b>cond</b> 是条件数：两列有多接近平行。它越大，输入的一点点误差就会被放大成解的一点点巨大偏差——点「近乎平行」，det 只剩 0.02，解直接飞到 (−97, 50)，图上会标「解跑到图外」。这就是「有答案，但别太信」。</div>
     </div>
 
-    <p><b>列的看法（先看这个）</b>：把 <span class="math">Ax = b</span> 读成</p>
-    <div class="eq">x₁·(第一列) + x₂·(第二列) = b</div>
+    <div class="def">
+      <span class="term">条件数 cond(A) / 病态</span>
+      <span class="math">cond(A) = |σ_max / σ_min|</span>（2×2 时也等于两列「几乎平行的程度」）。它衡量<b>输入误差会被放大几倍</b>：cond = 100 时，b 里 0.1% 的误差，解里就可能是 10%。
+      <span class="why">经验分界：<b>cond &lt; 100</b> 放心用；<b>100 ~ 1e6</b> 勉强，要留意；<b>&gt; 1e6</b> 基本别信结果。这类矩阵叫<b>病态</b>（ill-conditioned）——解存在且唯一，但数值上站不住。</span>
+      <span class="warn">病态和「无解」是两件事：病态是数值问题（秩满、det≠0 但很小），无解是结构问题（秩不够）。前者换算法能缓解，后者只能退而求最小二乘。</span>
+    </div>
+    <p><b>列的看法（先看这个）</b>：把 <span class="math">Ax = b</span> 读成</p>    <div class="eq">x₁·(第一列) + x₂·(第二列) = b</div>
     <p>——你要用两列当配料，按系数 <span class="math">x₁, x₂</span> 配出一杯正好等于 b 的饮料。<b>配得出来，就有解；配不出来，就无解。</b>两列能配出的所有点的集合，叫<b>列空间</b>。</p>
+
+    <div class="def">
+      <span class="term">子空间 / 列空间 Col(A)</span>
+      一个集合如果对加法和数乘封闭（里面任意两个向量相加、任意一个乘个数，还在里面），就叫<b>子空间</b>；几何上它总是过原点的一条线、或一张过原点的平面、或整个空间、或只有原点。<br>
+      <b>列空间</b>就是 A 所有列的线性组合构成的集合，记作 <span class="math">Col(A) = { A·x : x 取遍所有可能 }</span>。
+      <span class="why">句子一换就通了：<b>Ax = b 有解 ⟺ b ∈ Col(A)</b>。秩就是 Col(A) 的维数——秩 2 时它是整个平面，秩 1 时它被压成一条线，b 跑到线外就没答案。</span>
+    </div>
     <p><b>行的看法</b>：每条方程是一条直线，解就是交点。两条线相交于一点 = 唯一解；两条线平行 = 无解；两条线重合 = 无穷多解。</p>
     <p>两种看法是同一件事的两面：<b>行平行</b> ⟺ 两行成比例 ⟺ <b>两列也成比例</b> ⟺ 列空间被压成一条线 ⟺ 秩 &lt; 2。自己拖「近乎平行」那组数看一遍，比背十遍强。</p>
   </section>
@@ -242,6 +259,11 @@
   <section>
     <h2><span class="n">3</span>秩：这个矩阵到底有几个独立方向</h2>
     <p>秩（rank）的一句话定义：<b>矩阵里真正互相独立的列有几个</b>。不独立的列，只是别人乘个倍数的结果，它带不来新信息。</p>
+    <div class="def">
+      <span class="term">秩 rank(A) / 满秩 / 亏秩</span>
+      矩阵里<b>真正互相独立的列</b>有几个，就是秩几。等价说法：列空间的维数、消元后非零行的个数。
+      <span class="why">n×n 方阵时：<b>秩 = n</b> 叫<b>满秩</b>（det ≠ 0，可逆，任何 b 都有唯一解）；<b>秩 &lt; n</b> 叫<b>亏秩</b>（det = 0，列空间缩水，b 可能落在外面）。秩永远 ≤ min(m, n)——再多的列也变不出更多独立方向。</span>
+    </div>
     <p>三种说法完全等价，做题时随便挑最方便的那个：</p>
     <table>
       <tr><th>说法</th><th>怎么看出来</th></tr>
@@ -268,12 +290,23 @@
       <tr><td>0</td><td>1</td><td>b 不在那条直线上</td><td><b>无解</b>——只能退而求「最接近」</td></tr>
     </table>
     <p>第三行是整门课后半段的主角：<b>b 落不到列空间里，问题本身就没有精确答案</b>。这时候不是硬凑，而是把 b 投影进去，取投影点对应的解——那就是下一课的最小二乘。</p>
+    <div class="def">
+      <span class="term">超定 / 欠定</span>
+      <span class="math">Ax = b</span> 里 A 是 m×n：<b>m &gt; n</b>（方程比未知数多）叫<b>超定</b>，几乎注定无解，只能求「最接近」——这是线性回归的日常形状；<b>m &lt; n</b>（未知数比方程多）叫<b>欠定</b>，通常有无穷多解，要再挑一个（比如长度最小的）。m = n 才可能恰好唯一。
+      <span class="why">记住这个对应：<b>方程数管「能不能对上」，未知数管「有多少自由度」</b>。多出来的方程挤在一起互相打架，少掉的约束留下一条线。</span>
+    </div>
 
     <h3>拿一个亏秩的例子算到底</h3>
     <p>取 A = [[1, 2], [2, 4]]，两列 (1, 2) 和 (2, 4) 是同一方向的，秩 = 1，列空间就是直线 <span class="math">y = 2x</span>。</p>
     <p><b>先试 b = (3, 6)</b>：(3, 6) 正好在 y = 2x 上，所以有解，而且不止一个。numpy 的 <code>solve</code> 会直接报错（矩阵不可逆），<code>lstsq</code> 会还给你一个解 (0.6, 1.2)。但它只是<b>其中一个</b>——所有解是：</p>
     <div class="eq">x = (0.6, 1.2) + t·(2, −1)</div>
     <p>代进去验算：A·(0.6 + 2t, 1.2 − t) = (0.6 + 2t) + 2(1.2 − t) 的第一行 = 0.6 + 2t + 2.4 − 2t = 3 ✓，第二行同理 = 6 ✓。<b>t 取任何值都成立</b>。向量 (2, −1) 就是「被压没了的方向」——它满足 A·n = 0，叫<b>零空间</b>。</p>
+    <div class="def">
+      <span class="term">零空间 Null(A)（也叫核）</span>
+      所有被矩阵<b>压成零</b>的向量：<span class="math">Null(A) = { x : A·x = 0 }</span>。它永远是 {0} 或一条过原点的直线（三维里还可能是过原点的平面）。
+      <span class="why">它回答「有多少东西被弄丢了」：零空间只有原点 ⟺ 没有信息被压没 ⟺ 解唯一。零空间里有别的向量 n，则 <b>x_p + t·n</b> 全是解——这就是「无穷多解」的来源。</span>
+      <span class="warn">别把零空间和列空间搞混：列空间是「输出能落在哪」（b 的空间），零空间是「输入里哪部分被扔掉了」（x 的空间）。两者维数加起来正好等于列数。</span>
+    </div>
     <p><b>再试 b = (3, 7)</b>：(3, 7) 不在那条线上（因为 7 ≠ 2×3），所以<b>无解</b>。这时 <code>solve</code> 报错，<code>lstsq</code> 给你最接近的那一点：投影到 (3.4, 6.8)，残差 (−0.4, 0.2)，长度 0.4472。</p>
     <div class="quote">
       <b>一句话记法：</b>解 = 特解 + 零空间的任意组合。<br>
@@ -392,7 +425,7 @@ C = np.array([[<span class="s">1</span>, <span class="s">1</span>], [<span class
 
   <div class="pager">
     <a href="lesson-02.html">← 第 2 课：矩阵</a>
-    <span style="color:var(--muted)">第 4 课：最小二乘与投影（待解锁）</span>
+    <a href="lesson-04.html">第 4 课：最小二乘与投影 →</a>
   </div>
 
 </div>

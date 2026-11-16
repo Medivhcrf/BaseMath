@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 4 课 · 最小二乘与投影：无解时最好的答案</title>
+<style>
+  :root{
+    --bg:#f7f5ef; --card:#fffdf8; --ink:#16233a; --muted:#5b6b7f;
+    --line:#e3ded2; --line2:#d2cbbb;
+    --teal:#0d6f6a; --blue:#1d4ed8; --amber:#a16207; --rose:#9f1239; --violet:#5b21b6;
+    --mono:'JetBrains Mono','DejaVu Sans Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);font-family:'Noto Sans CJK SC','Source Han Sans SC','Microsoft YaHei',sans-serif;line-height:1.78;font-size:16px}
+  .wrap{max-width:820px;margin:0 auto;padding:0 22px 90px}
+  a{color:var(--blue)}
+
+  .topnav{display:flex;justify-content:space-between;font-size:13px;padding:18px 0 0;color:var(--muted)}
+  .topnav a{text-decoration:none}
+
+  header{padding:26px 0 26px;border-bottom:1px solid var(--line2);margin-bottom:34px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .tag{font-size:12px;padding:3px 10px;border-radius:999px;background:#e9f0ef;color:var(--teal);font-weight:700;letter-spacing:.04em}
+  .tag.b{background:#e8ecfb;color:var(--blue)}
+  .tag.c{background:#f6eadd;color:var(--amber)}
+  h1{font-size:clamp(26px,4.6vw,36px);line-height:1.25;font-weight:800;letter-spacing:.01em}
+  .sub{color:var(--muted);font-size:16px;margin-top:8px}
+  .sub b{color:var(--ink)}
+
+  .goal{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:0 12px 12px 0;padding:16px 20px;margin-top:20px;font-size:14.5px}
+  .goal b{color:var(--teal)}
+
+  section{margin-bottom:44px}
+  h2{font-size:13px;letter-spacing:.16em;color:var(--muted);font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+  h2 .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;letter-spacing:0;flex:none}
+  h2::after{content:"";flex:1;height:1px;background:var(--line)}
+  h3{font-size:19px;font-weight:800;margin:18px 0 8px}
+  p{color:#33415a;margin-bottom:12px}
+  p b{color:var(--ink)}
+  .big{font-size:18.5px;line-height:1.85;color:var(--ink)}
+  em{font-style:normal;color:var(--teal);font-weight:700}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:16px 0}
+  .quote{background:#fbf8f0;border:1px dashed var(--line2);border-radius:12px;padding:16px 20px;font-size:15px;color:#4a5468;margin:16px 0}
+  .quote b{color:var(--amber)}
+  .small{font-size:13.5px;color:var(--muted)}
+  ul,ol{margin:10px 0 14px;padding-left:22px}
+  li{margin-bottom:6px;color:#3a475c}
+
+  /* 定义卡：本课新增，每个新概念的第一次出现都配一张 */
+  .def{background:#f2f6fb;border:1px solid #d8e2ef;border-left:4px solid var(--blue);border-radius:0 12px 12px 0;padding:14px 18px;margin:16px 0;font-size:14.5px;color:#33415a}
+  .def .term{display:inline-block;font-weight:800;color:var(--blue);margin-right:8px;font-size:15px;letter-spacing:.02em}
+  .def .why{display:block;margin-top:7px;font-size:13.5px;color:var(--muted)}
+  .def .warn{display:block;margin-top:7px;font-size:13.5px;color:var(--rose)}
+
+  /* 交互图 */
+  .fig{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 16px 10px;margin:18px 0}
+  .fig svg{display:block;width:100%;max-width:520px;height:auto;margin:0 auto}
+  .fig .cap{font-size:12.5px;color:var(--muted);text-align:center;padding:6px 0 8px}
+  .readout{display:flex;gap:8px;flex-wrap:wrap;padding:0 6px 12px;font-size:13px;justify-content:center}
+  .pill{font-family:var(--mono);background:#eef2f7;color:#1f3a68;padding:4px 10px;border-radius:7px}
+  .pill.warn{background:#fdecec;color:#9f1239}
+  .pill.ok{background:#e9f0ef;color:#0d6f6a}
+  .pill.mid{background:#f6eadd;color:#a16207}
+
+  .modebar{display:flex;gap:8px;justify-content:center;padding:2px 4px 10px}
+  .modebar button{font:inherit;font-size:13px;padding:6px 16px;border-radius:999px;border:1px solid var(--line2);background:#f4f1e8;color:#3c4a5e;cursor:pointer;transition:background .15s}
+  .modebar button:hover{background:#e9e4d6}
+  .modebar button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  .ctrls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px 20px;padding:6px 4px}
+  .ctrls .row{display:flex;align-items:center;gap:9px;font-size:13px;color:#3c4a5e}
+  .ctrls .row b{font-family:var(--mono);width:12px;color:#16233a;text-align:center}
+  .ctrls .row input{flex:1;min-width:60px;accent-color:#1d4ed8}
+  .ctrls .row .v{font-family:var(--mono);width:42px;text-align:right;font-size:12.5px;color:#1f3a68}
+  .presets{display:flex;flex-wrap:wrap;gap:8px;padding:10px 4px 12px;justify-content:center}
+  .presets button{font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;border:1px solid var(--line2);background:#f4f1e8;color:#3c4a5e;cursor:pointer;transition:background .15s}
+  .presets button:hover{background:#e9e4d6}
+  .presets button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  /* 公式 */
+  .math{font-family:'Times New Roman','DejaVu Serif',serif;font-size:17.5px}
+  .eq{display:block;text-align:center;background:#f3f1e9;border-radius:10px;padding:14px 12px;margin:14px 0;font-family:'Times New Roman','DejaVu Serif',serif;font-size:19px;letter-spacing:.02em;overflow-x:auto;white-space:nowrap}
+
+  table{width:100%;border-collapse:collapse;font-size:14.5px;margin:14px 0;background:var(--card)}
+  th,td{padding:11px 13px;border:1px solid var(--line);text-align:left;vertical-align:top;line-height:1.6}
+  th{background:#efece3;font-size:12.5px;letter-spacing:.05em;color:#3c4a5e;font-weight:700}
+  td:first-child{white-space:nowrap;font-weight:700;color:var(--teal)}
+  .mono{font-family:var(--mono);font-size:13.5px}
+
+  .matshow{display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--mono);font-size:15px;margin:16px 0}
+  .matshow .cells{display:grid;grid-template-columns:60px 60px;text-align:center;row-gap:2px}
+  .matshow .br{font-family:'Times New Roman','DejaVu Serif',serif;font-size:46px;line-height:.85;color:#46536b;font-weight:400}
+  .matshow .nm{font-family:'Times New Roman',serif;font-size:17px;margin-right:4px}
+  .matshow .cells.one{grid-template-columns:56px}
+
+  pre{background:#152034;color:#e6edf7;border-radius:12px;padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;line-height:1.65;margin:14px 0}
+  pre .c{color:#7d8fa8}
+  pre .k{color:#8fd3ff}
+  pre .s{color:#ffd479}
+  code{font-family:var(--mono);font-size:13.5px;background:#eef2f7;padding:1px 6px;border-radius:5px;color:#1f3a68}
+
+  /* 练习 */
+  .ex{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+  .ex .q{font-weight:700;color:var(--ink);font-size:15.5px;margin-bottom:6px;display:flex;gap:10px}
+  .ex .q .qn{color:var(--blue);font-family:var(--mono);flex:none}
+  .ex .hint{font-size:13.5px;color:var(--muted)}
+  details{margin-top:10px;border-top:1px dashed var(--line2);padding-top:10px}
+  summary{cursor:pointer;font-size:13.5px;font-weight:700;color:var(--teal);list-style:none;user-select:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸ ";display:inline-block;transition:transform .15s}
+  details[open] summary::before{transform:rotate(90deg)}
+  details .ans{margin-top:10px;font-size:14.5px;color:#3a475c}
+  details .ans .step{color:var(--muted);font-size:13.5px;display:block;margin-top:4px}
+
+  /* 明日问题 */
+  .next{background:var(--ink);color:#f4f1e8;border-radius:16px;padding:26px 26px}
+  .next h3{color:#fff;font-size:19px;margin:0 0 8px}
+  .next p{color:#c3ccdb;font-size:15px;margin:0}
+  .next b{color:#ffe7a8}
+  .next .q{color:#ffe7a8;font-style:normal;font-weight:700}
+
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:46px;padding-top:20px;border-top:1px solid var(--line2);font-size:14px}
+
+  /* 复习卡 */
+  .recall{background:#f0f5f4;border:1px solid #d3e3df;border-radius:12px;padding:16px 20px;font-size:14.5px}
+  .recall b{color:var(--teal)}
+  .recall ol{margin:8px 0 0 20px}
+  .recall li{margin-bottom:5px;color:#3a475c}
+
+  @media (max-width:640px){
+    body{font-size:15px}
+    .wrap{padding:0 16px 70px}
+    header{padding-top:18px}
+    .eq{font-size:16px;white-space:normal}
+    table{font-size:13.5px}
+    th,td{padding:9px 10px}
+    td:first-child{white-space:normal}
+    .ctrls{grid-template-columns:1fr 1fr}
+    .matshow .cells{grid-template-columns:48px 48px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topnav">
+    <a href="lesson-03.html">← 第 3 课</a>
+    <span>第 4 课 / 阶段 1 · 空间</span>
+  </div>
+
+  <header>
+    <div class="meta">
+      <span class="tag">第 4 课</span>
+      <span class="tag b">线性代数 · 逼近</span>
+      <span class="tag c">50 分钟 · 可拆两天</span>
+    </div>
+    <h1>最小二乘与投影：无解时最好的答案</h1>
+    <p class="sub">第 3 课说清了「什么时候无解」。这一课回答更常见的那个问题——<b>无解了，然后呢</b>。</p>
+    <div class="goal">
+      <b>学完你能：</b>把「拟合一条直线」读成「把 b 投影到平面上」；手算 <span class="mono">w = (a·b)/(a·a)</span> 和正规方程 <span class="mono">AᵀA x = Aᵀb</span>；说出残差为什么垂直于每一列；用 <span class="mono">np.linalg.lstsq</span> 三行拟合出一组点；判断 <span class="mono">R²</span> 好到什么程度。
+    </div>
+  </header>
+
+  <section>
+    <h2><span class="n">1</span>真实问题：四个点，一条过不去的直线</h2>
+    <p class="big">四个学生，学习时长分别是 1、2、3、4 小时，考了 2、3、5、4 分。你想总结一个规律：<b>多学一小时，多考几分</b>。</p>
+    <p>那就画一条直线 <span class="math">y = w₀ + w₁x</span>，意思是「分数 = 底分 + 每小时涨几分 × 时长」。四个点各给一个要求：</p>
+    <table>
+      <tr><th>学生</th><th>时长 x</th><th>要求它满足</th><th>实际分数 y</th></tr>
+      <tr><td>1</td><td>1</td><td>w₀ + w₁·1</td><td>2</td></tr>
+      <tr><td>2</td><td>2</td><td>w₀ + w₁·2</td><td>3</td></tr>
+      <tr><td>3</td><td>3</td><td>w₀ + w₁·3</td><td>5</td></tr>
+      <tr><td>4</td><td>4</td><td>w₀ + w₁·4</td><td>4</td></tr>
+    </table>
+    <p>四个方程、两个未知数。先解前两个：w₀ + w₁ = 2、w₀ + 2w₁ = 3 → w₁ = 1、w₀ = 1。代到第三个：1 + 3 = 4，可他是 <b>5</b> 分。差 1 分。</p>
+    <p>换成 w₀ = 1.5、w₁ = 0.8 试试：四个预测是 2.3、3.1、3.9、4.7，误差 −0.3、−0.1、+1.1、−0.7。<b>每个点都差一点，但每个都不太离谱。</b></p>
+    <div class="quote">
+      <b>现实里绝大多数问题都是这个形状：</b>方程比未知数多，要求互相打架，精确解根本不存在。这时候的正确问题不是「解是什么」，而是<b>「哪组参数让所有误差合起来最小」</b>。
+    </div>
+
+    <div class="def">
+      <span class="term">超定方程组</span>方程个数<b>多</b>于未知数个数（比如 4 个方程、2 个未知数），一般没有精确解。
+      <span class="why">什么时候遇到：拟合、回归、任何「数据点比模型参数多」的场合——这才是日常，不是例外。</span>
+      <span class="warn">别和「欠定」搞混：欠定是方程比未知数少<br>（信息不够、无穷多解，第 3 课的零空间），超定是信息太多、互相矛盾。</span>
+    </div>
+
+    <p>把四个方程写成一个矩阵式子，形状就露出来了：</p>
+    <div class="eq">X·w = y　　X 是 4×2，w 是 2 个数，y 是 4 个数</div>
+    <p>4 行 2 列——<b>X 的列空间最多只有 2 维</b>，而 y 住在 4 维空间里。y 要正好落在那个 2 维的「薄片」上才有精确解，概率基本是 0。所以下一步不是硬解，而是<b>把 y 压到那个薄片上，取离它最近的点</b>。</p>
+    <p>这件事有个名字：投影。先从最简单的一维情形看——把 b 投到<b>一条直线</b>上。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span>投影：为什么是「影子」而不是「随便挑个近的」</h2>
+    <p>下面这张图可以在两种模式间切换。先看「投影到一条直线」：蓝箭头是目标 b，绿色是方向 a，橙色是 b 落在 a 上的影子。</p>
+
+    <div class="fig">
+      <svg id="fig" viewBox="40 0 380 340" role="img" aria-label="投影与直线拟合的交互图">
+        <defs>
+          <clipPath id="clip"><rect x="40" y="0" width="380" height="340"/></clipPath>
+          <marker id="ah-a" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 z" fill="#a16207"/></marker>
+          <marker id="ah-b" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 z" fill="#1d4ed8"/></marker>
+          <marker id="ah-g" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 z" fill="#0d6f6a"/></marker>
+        </defs>
+        <g id="scene" clip-path="url(#clip)"></g>
+      </svg>
+      <div class="modebar">
+        <button id="mProj" class="on">投影到一条直线</button>
+        <button id="mFit">四个点拟合直线</button>
+      </div>
+      <div class="readout" id="roProj">
+        <span class="pill">a·b = <b id="vdot">5</b></span>
+        <span class="pill">w = <b id="vw">1.00</b></span>
+        <span class="pill">残差 |r| = <b id="vr">2.236</b></span>
+        <span class="pill ok" id="vperp">r ⊥ a ✓</span>
+      </div>
+      <div class="readout" id="roFit" style="display:none">
+        <span class="pill">直线 = <b id="vline">1.50 + 0.80x</b></span>
+        <span class="pill" id="vsse">SSE = 1.80</span>
+        <span class="pill mid" id="vgap">离最优 0.00</span>
+      </div>
+      <div class="ctrls" id="ctrlProj">
+        <div class="row"><b>a₁</b><input id="sax" type="range" min="-3" max="3" step="0.05" value="1"><span class="v" id="vax">1.00</span></div>
+        <div class="row"><b>a₂</b><input id="say" type="range" min="-3" max="3" step="0.05" value="2"><span class="v" id="vay">2.00</span></div>
+        <div class="row"><b>bx</b><input id="sbx" type="range" min="-4" max="4" step="0.05" value="3"><span class="v" id="vbx">3.00</span></div>
+        <div class="row"><b>by</b><input id="sby" type="range" min="-4" max="4" step="0.05" value="1"><span class="v" id="vby">1.00</span></div>
+      </div>
+      <div class="ctrls" id="ctrlFit" style="display:none">
+        <div class="row"><b>w₀</b><input id="si" type="range" min="-2" max="4" step="0.05" value="1.5"><span class="v" id="vi">1.50</span></div>
+        <div class="row"><b>w₁</b><input id="ss" type="range" min="-1" max="3" step="0.05" value="0.8"><span class="v" id="vs">0.80</span></div>
+        <div class="row"></div>
+      </div>
+      <div class="presets" id="preProj">
+        <button data-a="1,2">a = (1, 2)</button>
+        <button data-a="0,1">a = (0, 1)</button>
+        <button data-a="3,0.5">a 很平</button>
+        <button data-p="3,1">b = (3, 1)</button>
+        <button data-p="2,4">b 顺着 a</button>
+        <button data-p="-2,3">b 在另一侧</button>
+      </div>
+      <div class="presets" id="preFit" style="display:none">
+        <button data-f="1.5,0.8">跳到最优</button>
+        <button data-f="1,1">过前两个点</button>
+        <button data-f="0,1">过原点斜率 1</button>
+      </div>
+      <div class="cap" id="capText">拖 bx、by 移动蓝箭头，橙色影子会跟着走。注意橙色和蓝色之间那条虚线<b>始终垂直</b>于绿线——这不是巧合，是投影的定义。</div>
+    </div>
+
+    <p>先把「投影」这个词钉死：</p>
+    <div class="def">
+      <span class="term">投影</span>把一个向量 b 压到某条方向 a 上，得到沿该方向离 b <b>最近</b>的那个点。记作 <span class="mono">proj = ((a·b)/(a·a))·a</span>。
+      <span class="why">为什么这就是「最近」：所有落在这条线上的点里，只有它到 b 的连线与线垂直；垂线段最短，这是平面几何里就学过的事。</span>
+      <span class="warn">注意投影的结果是<b>一个向量</b>（影子），不是一个数。那个数 w = (a·b)/(a·a) 是「要几个 a 才能凑出影子」。</span>
+    </div>
+
+    <div class="def">
+      <span class="term">残差</span>b 减去它的投影：<span class="mono">r = b − proj</span>。它就是「模型解释不了的那部分」，也叫误差。（第 3 课那个 0.4472 就是这个东西的长度。）
+      <span class="why">残差是这一课的主角：最小二乘的全部思想，就是让残差的长度最小。</span>
+    </div>
+
+    <div class="def">
+      <span class="term">正交（垂直）</span>两个向量的内积等于 0，就叫正交：<span class="mono">a·b = 0</span>。
+      <span class="why">为什么用内积定义而不是「看着像 90°」：内积对任意维数都成立，100 维里你没法「看」。第 1 课算过，cos 90° = 0，内积正比于 cos。</span>
+    </div>
+
+    <div class="def">
+      <span class="term">范数（长度）</span>向量自己的长度，记 <span class="mono">‖v‖ = √(v·v) = √(v₁² + v₂² + …)</span>。
+      <span class="why">就是勾股定理在任意维数的推广。代码里是 <span class="mono">np.linalg.norm(v)</span>。上一课写的 <span class="mono">|r|</span> 就是 <span class="mono">‖r‖</span>。</span>
+    </div>
+
+    <h3>w 是怎么算出来的：一条要求，解一个数</h3>
+    <p>要求只有一条：<b>残差必须垂直于 a</b>。写成式子，再解：</p>
+    <div class="eq">(b − w·a) · a = 0　⟹　a·b − w(a·a) = 0　⟹　w = (a·b)/(a·a)</div>
+    <p>这就是「为什么是除法」的全部原因，没有别的魔法。拿图上的默认值验证：a = (1, 2)、b = (3, 1)：</p>
+    <table>
+      <tr><th>量</th><th>怎么算</th><th>结果</th></tr>
+      <tr><td>a·b</td><td>1×3 + 2×1</td><td>5</td></tr>
+      <tr><td>a·a</td><td>1×1 + 2×2</td><td>5</td></tr>
+      <tr><td>w</td><td>5 ÷ 5</td><td>1</td></tr>
+      <tr><td>proj</td><td>1 × (1, 2)</td><td>(1, 2)</td></tr>
+      <tr><td>r</td><td>(3, 1) − (1, 2)</td><td>(2, −1)</td></tr>
+      <tr><td>验证</td><td>r·a = 2×1 + (−1)×2</td><td>0 ✓</td></tr>
+      <tr><td>‖r‖</td><td>√(4 + 1)</td><td>2.236</td></tr>
+    </table>
+    <p class="small">顺带看一眼：w = 1 意味着影子正好等于 a 本身，不是因为巧合，而是因为 b = (3,1) 在 a 方向上「正好够一个 a」——b − a = (2,−1) 垂直于 a。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span>从一条线推广到多列：最小二乘</h2>
+    <p>一条直线不够用。拟合直线时，你的模型是「1 和 x 两列的混合」，也是<b>两列</b>——一个负责底分，一个负责斜率。所以真正的投影，是投到<b>两列张成的整个平面</b>上，而不是一条线。</p>
+    <p>做法一模一样，只是把「垂直于 a」改成「垂直于每一列」：</p>
+    <div class="eq">Aᵀ·r = 0　⟹　Aᵀ(b − Ax) = 0　⟹　AᵀA·x = Aᵀb</div>
+    <p>这一个式子有个专门名字：正规方程。它把「解不出来的 4 个方程」换成「能解的 2 个方程」。</p>
+
+    <div class="def">
+      <span class="term">转置 Aᵀ</span>把矩阵的行列对调：原本第 i 行第 j 列的数，搬到第 j 行第 i 列。4×2 的 A 转置后是 2×4。
+      <span class="why">它为什么出现在这里：A 把 2 维的 w 送到 4 维，而我们要在 4 维里做内积检查——Aᵀ 负责把 4 维的残差「收」回 2 维，于是「垂直于每一列」就变成一个 2×4 乘 4×1 的式子。</span>
+      <span class="warn">工程上别手写转置再相乘，用 <span class="mono">A.T @ A</span>，numpy 会处理。</span>
+    </div>
+
+    <div class="def">
+      <span class="term">最小二乘</span>在无精确解时，取让残差<b>长度的平方</b>最小的那个 x。因为平方，记号叫 least squares。
+      <span class="why">为什么是平方而不是绝对值：平方可导，能写成正规方程（线性方程）；绝对值的最优点会卡在点上，没有公式。而且平方对大误差惩罚更重——这符合「别错得太离谱」的直觉。</span>
+      <span class="warn">它不是「随便一个近解」，而是<b>唯一</b>的最优点（当 A 的列线性无关时）。</span>
+    </div>
+
+    <div class="def">
+      <span class="term">正规方程</span><span class="mono">AᵀA·x = Aᵀb</span>。左边方阵、右边已知，直接 <span class="mono">solve</span> 就行。
+      <span class="why">它的几何含义：残差与 A 的每一列都正交——投影的定义式，只是写成矩阵。</span>
+      <span class="warn">AᵀA 一定对称，但<b>不一定可逆</b>。列有重复（比如两列测的是同一件事，第 3 课的亏秩）时它就奇异，这时要用伪逆 / SVD，numpy 的 <span class="mono">lstsq</span> 已经替你处理。</span>
+    </div>
+
+    <div class="quote">
+      <b>一句话串起来：</b>无解 → 找最近的 → 最近的点就是投影 → 投影的判据是残差正交 → 正交写成矩阵就是正规方程。
+      <br>四步，一环扣一环，没有跳步。
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">4</span>回到四个点：拟合一条直线</h2>
+    <p>现在把四个点真的拟合一遍。模型是 <span class="math">y = w₀ + w₁x</span>，写成矩阵：</p>
+    <div class="eq">X = [[1, 1], [1, 2], [1, 3], [1, 4]]　　y = (2, 3, 5, 4)</div>
+    <p>第一列全是 1，因为 <span class="math">w₀</span> 对每个点都加一次；第二列是时长。</p>
+    <p>切到图上的「四个点拟合直线」模式，拖两个滑块，看 SSE（残差平方和）怎么变：</p>
+    <table>
+      <tr><th>直线</th><th>预测</th><th>残差</th><th>SSE</th></tr>
+      <tr><td>0 + 1x</td><td>1, 2, 3, 4</td><td>1, 1, 2, 0</td><td>6.00</td></tr>
+      <tr><td>1 + 1x</td><td>2, 3, 4, 5</td><td>0, 0, 1, −1</td><td>2.00</td></tr>
+      <tr><td>0.5 + 1x</td><td>1.5, 2.5, 3.5, 4.5</td><td>0.5, 0.5, 1.5, −0.5</td><td>3.00</td></tr>
+      <tr><td>2 + 0.8x</td><td>2.8, 3.6, 4.4, 5.2</td><td>−0.8, −0.6, 0.6, −1.2</td><td>2.80</td></tr>
+      <tr><td><b>1.5 + 0.8x</b></td><td><b>2.3, 3.1, 3.9, 4.7</b></td><td><b>−0.3, −0.1, 1.1, −0.7</b></td><td><b>1.80</b></td></tr>
+    </table>
+    <p>1.8 是最小的那个。它怎么来的？解正规方程：</p>
+    <div class="eq">XᵀX = [[4, 10], [10, 30]]　　Xᵀy = (14, 39)　　⟹　w = (1.5, 0.8)</div>
+    <p>解的过程：4w₀ + 10w₁ = 14、10w₀ + 30w₁ = 39 → 第一式乘 2.5 得 10w₀ + 25w₁ = 35，减去第二式：5w₁ = 4 → w₁ = 0.8，代回 w₀ = 1.5。<b>答案和图上「跳到最优」按钮一模一样。</b></p>
+    <p>再验一下残差是不是真的垂直于两列：X 的两列是 (1,1,1,1) 和 (1,2,3,4)。</p>
+    <table>
+      <tr><th>和谁做内积</th><th>计算</th><th>结果</th></tr>
+      <tr><td>第一列（全 1）</td><td>−0.3 − 0.1 + 1.1 − 0.7</td><td>0 ✓ 残差和为 0</td></tr>
+      <tr><td>第二列（时长）</td><td>−0.3 − 0.2 + 3.3 − 2.8</td><td>0 ✓</td></tr>
+    </table>
+    <p class="small">第一列内积为 0 有个好记的说法：<b>最小二乘的残差，加起来一定等于 0</b>。以后看到残差和不为 0，说明哪里算错了。</p>
+
+    <h3>这个 1.8 算好还是算差？</h3>
+    <div class="def">
+      <span class="term">决定系数 R²</span>用模型解释掉的波动比例：<span class="mono">R² = 1 − SSE / SST</span>，其中 SST 是 y 自己的平方波动（都拿平均值当预测时的 SSE）。
+      <span class="why">它的读法：R² = 0.64 表示「分数的波动里，64% 能被学习时长解释」，剩下 36% 是别的因素。0 到 1 之间，越接近 1 拟合越紧。</span>
+      <span class="warn">别把它当真理：R² 高不等于模型对（可能过拟合，也可能只是变量在同步变化），R² 低也不等于没用。它衡量的是「解释了多少波动」，不是「因果」。另外只有带截距的模型才有这个定义。</span>
+    </div>
+    <p>这道题的 SST = (2−3.5)² + (3−3.5)² + (5−3.5)² + (4−3.5)² = 2.25 + 0.25 + 2.25 + 0.25 = 5.0，所以：</p>
+    <div class="eq">R² = 1 − 1.8 / 5.0 = 0.64</div>
+    <p>四个点的散落程度，用一条直线解释掉了 64%。这不是「对」或「错」，是「够不够用」——做预测够用，做因果结论远远不够。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">5</span>工具表：这一课只留四条</h2>
+    <table>
+      <tr><th>要干的事</th><th>式子 / 函数</th><th>说明</th></tr>
+      <tr><td>一步拟合</td><td class="mono">np.linalg.lstsq(X, y, rcond=None)</td><td>返回 (w, 残差平方和, 秩, 奇异值)。永远不报错，永远给一个最接近的解</td></tr>
+      <tr><td>多项式 / 直线</td><td class="mono">np.polyfit(x, y, 1)</td><td>1 就是直线，返回 [斜率, 截距]；d 次就是 d 次多项式</td></tr>
+      <tr><td>自己解正规方程</td><td class="mono">np.linalg.solve(X.T@X, X.T@y)</td><td>只适合教学和小数据；大数据下数值不稳，用 lstsq</td></tr>
+      <tr><td>列有重复时</td><td class="mono">np.linalg.pinv(X) @ y</td><td>伪逆：亏秩时给出长度最小的那个解（第 3 课的「最小范数」）</td></tr>
+    </table>
+    <p class="small">为什么正式代码里推荐 <span class="mono">lstsq</span> 而不是自己解正规方程：<span class="mono">AᵀA</span> 会把条件数平方（第 3 课那个 40002，平方之后就是 1.6×10⁹），浮点误差被放大得厉害。lstsq 背后是 QR 分解，绕开了这一步。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">6</span>动手：10 分钟，用 numpy 验证</h2>
+<pre><span class="c"># 1. 一维投影：把 b 投到 a 上</span>
+<span class="k">import</span> numpy <span class="k">as</span> np
+a = np.array([<span class="s">1</span>, <span class="s">2</span>]); b = np.array([<span class="s">3</span>, <span class="s">1</span>])
+w = (a @ b) / (a @ a)              <span class="c"># 1.0</span>
+proj = w * a                       <span class="c"># [1. 2.]</span>
+r = b - proj                       <span class="c"># [ 2. -1.]</span>
+<span class="k">print</span>(w, proj, r @ a, np.linalg.norm(r))   <span class="c"># 1.0  [1. 2.]  0.0  2.2361</span>
+
+<span class="c"># 2. 四个点拟合直线</span>
+x = np.array([<span class="s">1</span>, <span class="s">2</span>, <span class="s">3</span>, <span class="s">4</span>], dtype=<span class="k">float</span>)
+y = np.array([<span class="s">2</span>, <span class="s">3</span>, <span class="s">5</span>, <span class="s">4</span>], dtype=<span class="k">float</span>)
+X = np.column_stack([np.ones_like(x), x])     <span class="c"># 第一列全是 1：截距项</span>
+w, sse, rank, sv = np.linalg.lstsq(X, y, rcond=<span class="k">None</span>)
+<span class="k">print</span>(w)                          <span class="c"># [1.5 0.8]</span>
+<span class="k">print</span>(sse)                        <span class="c"># [1.8]</span>
+
+<span class="c"># 3. 残差是否垂直于每一列</span>
+r = y - X @ w
+<span class="k">print</span>(X.T @ r)                    <span class="c"># [~0. ~0.]</span>
+
+<span class="c"># 4. 正规方程自己解一遍，和 lstsq 对照</span>
+<span class="k">print</span>(np.linalg.solve(X.T @ X, X.T @ y))   <span class="c"># [1.5 0.8]</span>
+
+<span class="c"># 5. 一个「列重复」的坏例子：第三列等于第一列</span>
+X2 = np.column_stack([X, np.ones_like(x) * <span class="s">1.0</span>])
+<span class="k">print</span>(np.linalg.matrix_rank(X2))  <span class="c"># 2 —— 列不满秩</span>
+<span class="k">print</span>(np.linalg.lstsq(X2, y, rcond=<span class="k">None</span>)[<span class="s">0</span>])  <span class="c"># 仍然给一个解（最小范数）</span></pre>
+    <p>跑完做三件事（比读代码重要）：</p>
+    <p>① 把第 1 段里的 b 改成 (2, 4)，看 w 变成 2、残差变成 0——<b>b 正好落在方向上时，投影就是 b 自己</b>。<br>
+    ② 把第 3 段打印的 <span class="mono">X.T @ r</span> 抄下来，它不是精确的 0（约 1e-16），这是浮点误差，<b>量级这么小就该读成 0</b>。<br>
+    ③ 把第 5 段的 rank 打印出来，再去掉第三列，rank 变回 2——<b>重复的列不带来新信息，这就是「秩」在拟合里的样子</b>。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">7</span>练习：三道，做完对答案</h2>
+
+    <div class="ex">
+      <div class="q"><span class="qn">1</span><span>a = (1, 3)、b = (4, 2)。求 b 在 a 上的投影、残差、残差长度，并验证残差与 a 正交。</span></div>
+      <div class="hint">先算 a·b 和 a·a，再用 w = 商。</div>
+      <details><summary>对答案</summary><div class="ans">
+        a·b = 4 + 6 = 10，a·a = 1 + 9 = 10，w = 1。
+        <span class="step">proj = (1, 3)</span>
+        <span class="step">r = (4, 2) − (1, 3) = (3, −1)</span>
+        <span class="step">‖r‖ = √10 ≈ 3.1623</span>
+        <span class="step">r·a = 3 − 3 = 0 ✓ 正交。</span>
+        <span class="step">顺带一句：w = 1 说明影子正好是 a 本身。</span>
+      </div></details>
+    </div>
+
+    <div class="ex">
+      <div class="q"><span class="qn">2</span><span>三个点 (0, 1)、(1, 3)、(2, 4)，拟合直线 y = w₀ + w₁x。求 w、残差、SSE。</span></div>
+      <div class="hint">X 是 3 行 2 列：[[1,0], [1,1], [1,2]]。先算 XᵀX 和 Xᵀy。</div>
+      <details><summary>对答案</summary><div class="ans">
+        XᵀX = [[3, 3], [3, 5]]，Xᵀy = (8, 11)。
+        <span class="step">解：3w₀ + 3w₁ = 8、3w₀ + 5w₁ = 11 → 2w₁ = 3 → w₁ = 1.5，w₀ = 8/3 − 1.5 ≈ 1.1667。</span>
+        <span class="step">预测：(1.1667, 2.6667, 4.1667)，残差：(−0.1667, 0.3333, −0.1667)。</span>
+        <span class="step">SSE = 0.0278 + 0.1111 + 0.0278 = 0.1667（精确值是 1/6）。</span>
+        <span class="step">验算：残差和 = 0 ✓；残差与 x 的内积 = 0 + 0.3333 − 0.3333 = 0 ✓。</span>
+      </div></details>
+    </div>
+
+    <div class="ex">
+      <div class="q"><span class="qn">3</span><span>AᵀA 什么时候不可逆？给出一个具体例子，并说明 lstsq 在这种情况下怎么处理。</span></div>
+      <div class="hint">想想第 3 课的亏秩：什么样的列会让「垂直于每一列」这个条件失去唯一性？</div>
+      <details><summary>对答案</summary><div class="ans">
+        当 A 的列<b>线性相关</b>（有一列能由别的列凑出来）时，AᵀA 奇异，不可逆。
+        <span class="step">例子：A = [[1, 1], [1, 1]]，两列完全一样，AᵀA = [[2, 2], [2, 2]]，det = 0。</span>
+        <span class="step">几何原因：列空间塌成一条线，投影点唯一，但「凑出投影的系数」有无穷多组——沿零空间移动不改变 Ax。</span>
+        <span class="step">lstsq 的处理：返回<b>长度最小</b>的那组系数（最小范数解），即把解沿零空间平移到离原点最近。这就是第 3 课「lstsq 总给一个解」的确切含义。</span>
+      </div></details>
+    </div>
+  </section>
+
+  <section>
+    <div class="next">
+      <h3>明日问题（带着它睡）</h3>
+      <p>如果「投影到一条直线」不够，要投影到一个<b>最能代表数据的方向</b>上——这个方向怎么找？<span class="q">提示：它跟「矩阵乘完自己方向不变」这件事有关。下一课：特征值与 PCA。</span></p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">8</span>收尾：四问自测</h2>
+    <div class="recall">
+      <b>合上讲义，先自己答，再展开。</b>
+      <ol>
+        <li>为什么「无解」在现实里是常态，而不是异常？</li>
+        <li>投影为什么必须是「垂直」的那个点？</li>
+        <li>正规方程 AᵀA x = Aᵀb 是从哪句话推出来的？</li>
+        <li>SSE = 1.8、R² = 0.64，这两句话分别说了什么？</li>
+      </ol>
+      <details><summary>对答案</summary><div class="ans">
+        <span class="step">1. 因为方程个数通常多于未知数（超定），而 b 落在低维列空间之外的概率是压倒性的。数据越多越「打架」。</span>
+        <span class="step">2. 因为垂线段最短——在一条线上找离 b 最近的点，那条连线只能垂直于线。反过来，垂直的那个点也一定是最近的，两个方向都成立。</span>
+        <span class="step">3. 从「残差垂直于每一列」推出来的：Aᵀr = 0，展开 Aᵀ(b − Ax) = 0，移项即得。它就是投影的定义写成矩阵。</span>
+        <span class="step">4. SSE 是绝对量：残差平方和，单位是「分²」，只适合和别的模型比。R² 是相对量：模型解释掉 64% 的波动，无量纲，能跨问题比。</span>
+      </div></details>
+    </div>
+  </section>
+
+  <div class="pager">
+    <a href="lesson-03.html">← 第 3 课：秩与方程组</a>
+    <a href="index.html">路线图</a>
+    <span class="small">第 5 课：特征值与 PCA（待解锁）</span>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var NS='http://www.w3.org/2000/svg';
+  var S=38, OX=210, OY=170;
+  var scene=document.getElementById('scene');
+  function $(id){return document.getElementById(id);}
+  function mk(tag,attrs){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);return e;}
+  function X(v){return OX+S*v;}
+  function Y(v){return OY-S*v;}
+  function clear(){while(scene.firstChild)scene.removeChild(scene.firstChild);}
+  function line(x1,y1,x2,y2,color,w,dash){
+    var a={'x1':X(x1),'y1':Y(y1),'x2':X(x2),'y2':Y(y2),'stroke':color,'stroke-width':w||1.5};
+    if(dash)a['stroke-dasharray']=dash;
+    scene.appendChild(mk('line',a));
+  }
+  function arrow(x1,y1,x2,y2,color,marker){
+    scene.appendChild(mk('line',{'x1':X(x1),'y1':Y(y1),'x2':X(x2),'y2':Y(y2),'stroke':color,'stroke-width':2.4,'marker-end':'url(#'+marker+')'}));
+  }
+  function dot(x,y,color,r){scene.appendChild(mk('circle',{'cx':X(x),'cy':Y(y),'r':r||5,'fill':color}));}
+  function label(x,y,txt,color,size){
+    var t=mk('text',{'x':X(x),'y':Y(y),'fill':color||'#3c4a5e','font-size':size||12,'font-family':'JetBrains Mono, monospace'});
+    t.textContent=txt;scene.appendChild(t);
+  }
+  function grid(){
+    for(var i=-5;i<=5;i++){
+      if(i===0)continue;
+      line(i,-4,i,8,'#eae5d8',1);
+      line(-6,i,9,i,'#eae5d8',1);
+    }
+    line(-6,0,9,0,'#8e9aad',1.4);
+    line(0,-4,0,8,'#8e9aad',1.4);
+    label(8.4,-0.42,'x','#8e9aad',12);
+    label(-0.75,7.4,'y','#8e9aad',12);
+  }
+
+  var PX=[1,2,3,4], PY=[2,3,5,4], W0=1.5, W1=0.8;
+
+  function sse(w0,w1){
+    var s=0;
+    for(var i=0;i<4;i++){var e=(w0+w1*PX[i])-PY[i];s+=e*e;}
+    return s;
+  }
+
+  function renderProj(){
+    clear(); grid();
+    var ax=parseFloat($('sax').value), ay=parseFloat($('say').value);
+    var bx=parseFloat($('sbx').value), by=parseFloat($('sby').value);
+    var aa=ax*ax+ay*ay, dotp=ax*bx+ay*by;
+    var zero=aa<1e-6;
+    var w=zero?0:dotp/aa;
+    var px=w*ax, py=w*ay, rx=bx-px, ry=by-py;
+    if(!zero){
+      var L=9/Math.sqrt(aa);
+      line(-L*ax,-L*ay,L*ax,L*ay,'#b3bfd2',1.6,'6 5');
+      arrow(0,0,ax,ay,'#0d6f6a','ah-g');
+      arrow(0,0,px,py,'#a16207','ah-a');
+      var rn=Math.sqrt(rx*rx+ry*ry);
+      if(rn>0.15){
+        var sz=0.28, ux=rx/rn, uy=ry/rn, mx=ax/Math.sqrt(aa), my=ay/Math.sqrt(aa);
+        var poly=mk('polyline',{'points':(X(px)+' '+Y(py))+' '+(X(px+mx*sz)+' '+Y(py+my*sz))+' '+(X(px+mx*sz+ux*sz)+' '+Y(py+my*sz+uy*sz)),'fill':'none','stroke':'#9f1239','stroke-width':1.2});
+        scene.appendChild(poly);
+      }
+      label(ax*1.12,ay*1.12,'a','#0d6f6a',13);
+      label(px*0.55,py*0.55,'proj','#a16207',12);
+    }
+    line(px,py,bx,by,'#9f1239',1.6,'4 4');
+    arrow(0,0,bx,by,'#1d4ed8','ah-b');
+    dot(bx,by,'#1d4ed8',4.5);
+    label(bx+0.25,by+0.3,'b','#1d4ed8',13);
+    $('vdot').textContent=dotp.toFixed(2);
+    $('vw').textContent=zero?'—':w.toFixed(2);
+    $('vr').textContent=zero?'—':Math.sqrt(rx*rx+ry*ry).toFixed(3);
+    var pel=$('vperp');
+    if(zero){pel.textContent='a 不能是零向量';pel.className='pill warn';}
+    else{
+      var ok=Math.abs(rx*ax+ry*ay)<1e-9;
+      pel.textContent=ok?'r ⊥ a ✓':'r ⊥ a ≈ 0（浮点）';
+      pel.className='pill '+(ok?'ok':'mid');
+    }
+  }
+
+  function renderFit(){
+    clear(); grid();
+    var i0=parseFloat($('si').value), s0=parseFloat($('ss').value);
+    // 最优直线（虚线参考）
+    line(-6,W0+W1*(-6),9,W0+W1*9,'#b3bfd2',1.6,'6 5');
+    // 当前直线
+    line(-6,i0+s0*(-6),9,i0+s0*9,'#1d4ed8',2.2);
+    // 残差
+    for(var i=0;i<4;i++){
+      var pr=i0+s0*PX[i];
+      line(PX[i],PY[i],PX[i],pr,'#9f1239',1.4,'4 4');
+    }
+    for(var j=0;j<4;j++) dot(PX[j],PY[j],'#0d6f6a',5);
+    label(7.0,W0+W1*7-0.55,'最优','#b3bfd2',12);
+    var cur=sse(i0,s0), best=sse(W0,W1);
+    $('vline').textContent=i0.toFixed(2)+' + '+s0.toFixed(2)+'x';
+    $('vsse').textContent='SSE = '+cur.toFixed(2);
+    var g=$('vgap');
+    g.textContent='离最优 +'+(cur-best).toFixed(2);
+    g.className='pill '+(cur-best<0.005?'ok':'mid');
+  }
+
+  var mode='proj';
+  function applyMode(){
+    var isProj=(mode==='proj');
+    $('roProj').style.display=isProj?'flex':'none';
+    $('roFit').style.display=isProj?'none':'flex';
+    $('ctrlProj').style.display=isProj?'grid':'none';
+    $('ctrlFit').style.display=isProj?'none':'grid';
+    $('preProj').style.display=isProj?'flex':'none';
+    $('preFit').style.display=isProj?'none':'flex';
+    $('mProj').className=isProj?'on':'';
+    $('mFit').className=isProj?'':'on';
+    $('capText').innerHTML=isProj
+      ? '拖 bx、by 移动蓝箭头，橙色影子会跟着走。注意橙色和蓝色之间那条虚线<b>始终垂直</b>于绿线——这不是巧合，是投影的定义。'
+      : '拖 w₀、w₁ 移动蓝线，红色虚线是每个点的残差。灰色虚线是 1.5 + 0.8x——SSE 最小那条，试试别的直线能不能更低。';
+    if(isProj)renderProj(); else renderFit();
+  }
+
+  function render(){ if(mode==='proj')renderProj(); else renderFit(); }
+
+  ['sax','say','sbx','sby','si','ss'].forEach(function(id){
+    $(id).addEventListener('input',function(){
+      if(id==='sax')$('vax').textContent=parseFloat($('sax').value).toFixed(2);
+      if(id==='say')$('vay').textContent=parseFloat($('say').value).toFixed(2);
+      if(id==='sbx')$('vbx').textContent=parseFloat($('sbx').value).toFixed(2);
+      if(id==='sby')$('vby').textContent=parseFloat($('sby').value).toFixed(2);
+      if(id==='si')$('vi').textContent=parseFloat($('si').value).toFixed(2);
+      if(id==='ss')$('vs').textContent=parseFloat($('ss').value).toFixed(2);
+      render();
+    });
+  });
+
+  $('mProj').addEventListener('click',function(){mode='proj';applyMode();});
+  $('mFit').addEventListener('click',function(){mode='fit';applyMode();});
+
+  $('preProj').addEventListener('click',function(e){
+    var b=e.target; if(!b.dataset)return;
+    if(b.dataset.p){
+      var v=b.dataset.p.split(',');
+      $('sbx').value=parseFloat(v[0]);$('sby').value=parseFloat(v[1]);
+      $('vbx').textContent=parseFloat(v[0]).toFixed(2);
+      $('vby').textContent=parseFloat(v[1]).toFixed(2);
+    }
+    if(b.dataset.a){
+      var u=b.dataset.a.split(',');
+      $('sax').value=parseFloat(u[0]);$('say').value=parseFloat(u[1]);
+      $('vax').textContent=parseFloat(u[0]).toFixed(2);
+      $('vay').textContent=parseFloat(u[1]).toFixed(2);
+    }
+    render();
+  });
+
+  $('preFit').addEventListener('click',function(e){
+    var b=e.target; if(!b.dataset||!b.dataset.f)return;
+    var v=b.dataset.f.split(',');
+    $('si').value=parseFloat(v[0]);$('ss').value=parseFloat(v[1]);
+    $('vi').textContent=parseFloat(v[0]).toFixed(2);
+    $('vs').textContent=parseFloat(v[1]).toFixed(2);
+    render();
+  });
+
+  var q=new URLSearchParams(location.search);
+  if(q.get('m')==='fit')mode='fit';
+  if(q.get('b')){var bv=q.get('b').split(',');$('sbx').value=bv[0];$('sby').value=bv[1];}
+  applyMode();
+})();
+</script>
+</body>
+</html>
