@@ -425,7 +425,8 @@ sq = np.array([[<span class="s">0</span>,<span class="s">0</span>], [<span class
   </section>
 
   <section>
-    <h2><span class="n">7</span>练习：三道，做完对答案</h2>
+    <h2><span class="n">7</span>练习：六道，做完对答案</h2>
+    <p class="small">1、4 手算；2、5 判断与找错；3、6 用 numpy。卡住先看提示。</p>
 
     <div class="ex">
       <div class="q"><span class="qn">1</span><span>设 A = [[1, 2], [3, 4]]，x = (1, 5)。先用「列的混合」算 A·x，再用「行乘列」验算。det 是多少？面积放大几倍？正还是负？</span></div>
@@ -455,6 +456,48 @@ sq = np.array([[<span class="s">0</span>,<span class="s">0</span>], [<span class
         <span class="step">四个角变成 (0,0)、(1,0)、(1.5,1)、(0.5,1)，确实是个平行四边形。</span>
         <b>改成 [[1, 1], [1, 1]] 后 det = 0</b>，四个角变成 (0,0)、(1,1)、(2,2)、(1,1)——全部落在直线 y = x 上，正方形被压成了一条线段。
         <span class="step">注意 (1,0) 和 (0,1) 都被送到了 (1,1)：两个不同的点挤到同一个位置，这就是「信息丢了」的样子。</span>
+      </div></details>
+    </div>
+
+    <div class="ex">
+      <div class="q"><span class="qn">4</span><span>A = [[2, 1], [1, 3]]。写出它把 (1,0)、(0,1)、(1,1) 分别送到哪；再算 det 和 A⁻¹，并验证 A⁻¹ 把 (3,4) 送回 (1,1)。</span></div>
+      <div class="hint">前三个点的答案就在矩阵里，不用算——那就是两列。</div>
+      <details><summary>对答案</summary><div class="ans">
+        <b>(1,0) → (2,1)、(0,1) → (1,3)、(1,1) → (3,4)</b> —— 前两个就是两列，第三个是两列之和。
+        <span class="step">det = 2×3 − 1×1 = <b>5</b>：面积放大 5 倍，符号为正 → 没有翻面，可逆。</span>
+        <span class="step">A⁻¹ = (1/5)·[[3, −1], [−1, 2]] = [[0.6, −0.2], [−0.2, 0.4]]。</span>
+        <span class="step">A⁻¹(3,4) = (0.6×3 − 0.2×4, −0.2×3 + 0.4×4) = (1.8 − 0.8, −0.6 + 1.6) = <b>(1, 1)</b> ✓ 回到了出发的地方。</span>
+      </div></details>
+    </div>
+
+    <div class="ex">
+      <div class="q"><span class="qn">5</span><span>下面四个矩阵，各说出：面积放大几倍、翻不翻面、可不可逆。哪些会把「不同的点」压成同一个点？</span></div>
+<pre>A = [[1, 2], [2, 4]]     B = [[0, -1], [1, 0]]
+C = [[1, 1], [0, 1]]      D = [[2, 0], [0, 3]]</pre>
+      <div class="hint">四个 det 分别是 0、1、1、6。先想几何效果，再对答案。</div>
+      <details><summary>对答案</summary><div class="ans">
+        <b>A：det = 0</b> —— 面积归零、不可逆、必定把不同的点压在一起（整张平面压到直线 y = 2x 上）。
+        <span class="step"><b>B：det = 1</b> —— 面积不变、不翻面、可逆。它就是逆时针旋转 90°。</span>
+        <span class="step"><b>C：det = 1</b> —— 面积不变、不翻面、可逆。剪切：正方形被推成平行四边形，面积恰好还是 1。</span>
+        <span class="step"><b>D：det = 6</b> —— 面积 6 倍、不翻面、可逆。横纵各拉一次。</span>
+        <span class="step">两个提醒：① 面积不变 ≠ 形状不变，旋转和剪切都不改面积；② 只有 det = 0 才丢信息，只要 det ≠ 0，任何点都能被唯一地还原回来（用 A⁻¹）。</span>
+      </div></details>
+    </div>
+
+    <div class="ex">
+      <div class="q"><span class="qn">6</span><span>（编程）A = [[1,2],[3,4]]、B = [[0,1],[1,0]]。算 AB 和 BA：一样吗？再验证 det(AB) = det A · det B，以及 A(Bx) = (AB)x。</span></div>
+<pre>import numpy as np
+A = np.array([[1,2],[3,4]]); B = np.array([[0,1],[1,0]])
+print(A @ B); print(B @ A)
+print(np.linalg.det(A), np.linalg.det(B), np.linalg.det(A @ B))
+x = np.array([1, 5])
+print(A @ (B @ x), (A @ B) @ x)</pre>
+      <div class="hint">B 是「交换两个坐标」。想想先交换再拉伸、和先拉伸再交换，为什么不一样。</div>
+      <details><summary>对答案</summary><div class="ans">
+        <b>AB = [[2,1],[4,3]]，BA = [[3,4],[1,2]]</b> —— 不一样，矩阵乘法不能交换顺序。
+        <span class="step">意义：AB 读作「先做 B，再做 A」。先交换坐标再拉伸，跟先拉伸再交换，结果当然不同——就像「先穿袜子再穿鞋」和「先穿鞋再穿袜子」。</span>
+        <span class="step">det A = −2、det B = −1、det(AB) = 2 = (−2)×(−1) ✓。两次翻面 = 不翻面，面积倍数照样相乘——这就是 det 的「乘性」。</span>
+        <span class="step">A(Bx) 和 (AB)x 都等于 <b>(7, 19)</b>（Bx = (5,1)，A(5,1) = (5+2, 15+4)）：复合变换可以先合再作用，也可以先作用再复合。这就是矩阵乘法被定义成「行乘列」的原因，也是写代码时能链式相乘的依据。顺便看 AB 那两列：(2,4) 和 (1,3)——正是 B 的两列 (0,1)、(1,0) 被 A 送到的位置。</span>
       </div></details>
     </div>
   </section>
