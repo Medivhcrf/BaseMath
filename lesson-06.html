@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 6 课 · 主成分分析 PCA：把 12 个数压成 6 个数</title>
+<style>
+  :root{
+    --bg:#f7f5ef; --card:#fffdf8; --ink:#16233a; --muted:#5b6b7f;
+    --line:#e3ded2; --line2:#d2cbbb;
+    --teal:#0d6f6a; --blue:#1d4ed8; --amber:#a16207; --rose:#9f1239; --violet:#5b21b6;
+    --mono:'JetBrains Mono','DejaVu Sans Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);font-family:'Noto Sans CJK SC','Source Han Sans SC','Microsoft YaHei',sans-serif;line-height:1.78;font-size:16px}
+  .wrap{max-width:820px;margin:0 auto;padding:0 22px 90px}
+  a{color:var(--blue)}
+
+  .topnav{display:flex;justify-content:space-between;font-size:13px;padding:18px 0 0;color:var(--muted)}
+  .topnav a{text-decoration:none}
+
+  header{padding:26px 0 26px;border-bottom:1px solid var(--line2);margin-bottom:34px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .tag{font-size:12px;padding:3px 10px;border-radius:999px;background:#e9f0ef;color:var(--teal);font-weight:700;letter-spacing:.04em}
+  .tag.b{background:#e8ecfb;color:var(--blue)}
+  .tag.c{background:#f6eadd;color:var(--amber)}
+  h1{font-size:clamp(26px,4.6vw,36px);line-height:1.25;font-weight:800;letter-spacing:.01em}
+  .sub{color:var(--muted);font-size:16px;margin-top:8px}
+  .sub b{color:var(--ink)}
+
+  .goal{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:0 12px 12px 0;padding:16px 20px;margin-top:20px;font-size:14.5px}
+  .goal b{color:var(--teal)}
+
+  section{margin-bottom:44px}
+  h2{font-size:13px;letter-spacing:.16em;color:var(--muted);font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+  h2 .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;letter-spacing:0;flex:none}
+  h2::after{content:"";flex:1;height:1px;background:var(--line)}
+  h3{font-size:19px;font-weight:800;margin:18px 0 8px}
+  p{color:#33415a;margin-bottom:12px}
+  p b{color:var(--ink)}
+  .big{font-size:18.5px;line-height:1.85;color:var(--ink)}
+  em{font-style:normal;color:var(--teal);font-weight:700}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:16px 0}
+  .quote{background:#fbf8f0;border:1px dashed var(--line2);border-radius:12px;padding:16px 20px;font-size:15px;color:#4a5468;margin:16px 0}
+  .quote b{color:var(--amber)}
+  .small{font-size:13.5px;color:var(--muted)}
+  ul,ol{margin:10px 0 14px;padding-left:22px}
+  li{margin-bottom:6px;color:#3a475c}
+
+  /* 定义卡：本课新增，每个新概念的第一次出现都配一张 */
+  .def{background:#f2f6fb;border:1px solid #d8e2ef;border-left:4px solid var(--blue);border-radius:0 12px 12px 0;padding:14px 18px;margin:16px 0;font-size:14.5px;color:#33415a}
+  .def .term{display:inline-block;font-weight:800;color:var(--blue);margin-right:8px;font-size:15px;letter-spacing:.02em}
+  .def .why{display:block;margin-top:7px;font-size:13.5px;color:var(--muted)}
+  .def .warn{display:block;margin-top:7px;font-size:13.5px;color:var(--rose)}
+
+  /* 交互图 */
+  .fig{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 16px 10px;margin:18px 0}
+  .fig svg{display:block;width:100%;max-width:520px;height:auto;margin:0 auto}
+  .fig .cap{font-size:12.5px;color:var(--muted);text-align:center;padding:6px 0 8px}
+  .readout{display:flex;gap:8px;flex-wrap:wrap;padding:0 6px 12px;font-size:13px;justify-content:center}
+  .pill{font-family:var(--mono);background:#eef2f7;color:#1f3a68;padding:4px 10px;border-radius:7px}
+  .pill.warn{background:#fdecec;color:#9f1239}
+  .pill.ok{background:#e9f0ef;color:#0d6f6a}
+  .pill.mid{background:#f6eadd;color:#a16207}
+
+  .modebar{display:flex;gap:8px;justify-content:center;padding:2px 4px 10px}
+  .modebar button{font:inherit;font-size:13px;padding:6px 16px;border-radius:999px;border:1px solid var(--line2);background:#f4f1e8;color:#3c4a5e;cursor:pointer;transition:background .15s}
+  .modebar button:hover{background:#e9e4d6}
+  .modebar button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  .ctrls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px 20px;padding:6px 4px}
+  .ctrls .row{display:flex;align-items:center;gap:9px;font-size:13px;color:#3c4a5e}
+  .ctrls .row b{font-family:var(--mono);width:12px;color:#16233a;text-align:center}
+  .ctrls .row input{flex:1;min-width:60px;accent-color:#1d4ed8}
+  .ctrls .row .v{font-family:var(--mono);width:42px;text-align:right;font-size:12.5px;color:#1f3a68}
+  .presets{display:flex;flex-wrap:wrap;gap:8px;padding:10px 4px 12px;justify-content:center}
+  .presets button{font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;border:1px solid var(--line2);background:#f4f1e8;color:#3c4a5e;cursor:pointer;transition:background .15s}
+  .presets button:hover{background:#e9e4d6}
+  .presets button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  /* 公式 */
+  .math{font-family:'Times New Roman','DejaVu Serif',serif;font-size:17.5px}
+  .eq{display:block;text-align:center;background:#f3f1e9;border-radius:10px;padding:14px 12px;margin:14px 0;font-family:'Times New Roman','DejaVu Serif',serif;font-size:19px;letter-spacing:.02em;overflow-x:auto;white-space:nowrap}
+
+  table{width:100%;border-collapse:collapse;font-size:14.5px;margin:14px 0;background:var(--card)}
+  th,td{padding:11px 13px;border:1px solid var(--line);text-align:left;vertical-align:top;line-height:1.6}
+  th{background:#efece3;font-size:12.5px;letter-spacing:.05em;color:#3c4a5e;font-weight:700}
+  td:first-child{white-space:nowrap;font-weight:700;color:var(--teal)}
+  .mono{font-family:var(--mono);font-size:13.5px}
+
+  .matshow{display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--mono);font-size:15px;margin:16px 0}
+  .matshow .cells{display:grid;grid-template-columns:60px 60px;text-align:center;row-gap:2px}
+  .matshow .br{font-family:'Times New Roman','DejaVu Serif',serif;font-size:46px;line-height:.85;color:#46536b;font-weight:400}
+  .matshow .nm{font-family:'Times New Roman',serif;font-size:17px;margin-right:4px}
+  .matshow .cells.one{grid-template-columns:56px}
+
+  pre{background:#152034;color:#e6edf7;border-radius:12px;padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;line-height:1.65;margin:14px 0}
+  pre .c{color:#7d8fa8}
+  pre .k{color:#8fd3ff}
+  pre .s{color:#ffd479}
+  code{font-family:var(--mono);font-size:13.5px;background:#eef2f7;padding:1px 6px;border-radius:5px;color:#1f3a68}
+
+  /* 练习 */
+  .ex{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+  .ex .q{font-weight:700;color:var(--ink);font-size:15.5px;margin-bottom:6px;display:flex;gap:10px}
+  .ex .q .qn{color:var(--blue);font-family:var(--mono);flex:none}
+  .ex .hint{font-size:13.5px;color:var(--muted)}
+  details{margin-top:10px;border-top:1px dashed var(--line2);padding-top:10px}
+  summary{cursor:pointer;font-size:13.5px;font-weight:700;color:var(--teal);list-style:none;user-select:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸ ";display:inline-block;transition:transform .15s}
+  details[open] summary::before{transform:rotate(90deg)}
+  details .ans{margin-top:10px;font-size:14.5px;color:#3a475c}
+  details .ans .step{color:var(--muted);font-size:13.5px;display:block;margin-top:4px}
+
+  /* 明日问题 */
+  .next{background:var(--ink);color:#f4f1e8;border-radius:16px;padding:26px 26px}
+  .next h3{color:#fff;font-size:19px;margin:0 0 8px}
+  .next p{color:#c3ccdb;font-size:15px;margin:0}
+  .next b{color:#ffe7a8}
+  .next .q{color:#ffe7a8;font-style:normal;font-weight:700}
+
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:46px;padding-top:20px;border-top:1px solid var(--line2);font-size:14px}
+
+  /* 复习卡 */
+  .recall{background:#f0f5f4;border:1px solid #d3e3df;border-radius:12px;padding:16px 20px;font-size:14.5px}
+  .recall b{color:var(--teal)}
+  .recall ol{margin:8px 0 0 20px}
+  .recall li{margin-bottom:5px;color:#3a475c}
+
+  @media (max-width:640px){
+    body{font-size:15px}
+    .wrap{padding:0 16px 70px}
+    header{padding-top:18px}
+    .eq{font-size:16px;white-space:normal}
+    table{font-size:13.5px}
+    th,td{padding:9px 10px}
+    td:first-child{white-space:normal}
+    .ctrls{grid-template-columns:1fr 1fr}
+    .matshow .cells{grid-template-columns:48px 48px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topnav">
+    <a href="lesson-05.html">← 第 5 课</a>
+    <span>第 6 课 / 阶段 1 · 空间</span>
+  </div>
+
+  <header>
+    <div class="meta">
+      <span class="tag">第 6 课</span>
+      <span class="tag b">线性代数 · 降维</span>
+      <span class="tag c">55 分钟 · 可拆两天</span>
+    </div>
+    <h1>主成分分析 PCA：把 12 个数压成 6 个数</h1>
+    <p class="sub">第 5 课说清了「哪些方向不动」。这一课把它用在数据上，问一个完全不同的问题：<b>一堆点里，哪个方向最值钱</b>。</p>
+    <div class="goal">
+      <b>学完你能：</b>说出 PCA 的三步（中心化 → 协方差 → 特征分解）；手算 2 维小数据的协方差矩阵和主方向；解释「特征值 = 那个方向上的方差」；用解释方差比决定压到几维；把 6 个二维点压成 6 个数并算清损失了多少；用 <span class="mono">np.cov</span> + <span class="mono">np.linalg.eigh</span> 十行实现；说清为什么必须先中心化。
+    </div>
+  </header>
+
+  <div class="recall">
+    <b>这一课的路怎么走：六级台阶（每一级只解决一件事）</b>
+    <ol>
+      <li><b>看清楚问题</b>：6 个点、12 个数，其实它们几乎落在一条斜线上——两个读数在说同一件事。</li>
+      <li><b>把「最值钱」变成能算的数</b>：投影之后的<b>方差</b>。方差大 = 点在这个方向上分得开 = 信息多。</li>
+      <li><b>第一步：中心化</b>。把点挪到以均值为原点，否则你找到的是「离原点最远」，不是「分得最开」。</li>
+      <li><b>第二步：协方差矩阵</b>。它是一个 2×2 的对称矩阵，把「各方向分得多开、两个坐标怎么一起动」全装进去。</li>
+      <li><b>第三步：特征分解</b>。对称矩阵的特征向量就是候选方向，特征值就是那个方向的方差。</li>
+      <li><b>收尾：投影、重构、算损失</b>。压到一维以后还剩多少信息？用解释方差比和重构误差两个数说话。</li>
+    </ol>
+    <span class="small">任何一级卡住，就退回上一级；每节开头都有一句「这一步在干什么」。</span>
+  </div>
+
+  <section>
+    <h2><span class="n">1</span>真实问题：12 个数，其实只有 6 条信息</h2>
+    <p class="big">六个学生，记了两列数：每周自学时长，和一次小测的分数。</p>
+    <table>
+      <tr><th>学生</th><th>时长 x</th><th>分数 y</th></tr>
+      <tr><td>1</td><td>1</td><td>1.2</td></tr>
+      <tr><td>2</td><td>2</td><td>1.9</td></tr>
+      <tr><td>3</td><td>3</td><td>3.1</td></tr>
+      <tr><td>4</td><td>4</td><td>3.8</td></tr>
+      <tr><td>5</td><td>5</td><td>5.2</td></tr>
+      <tr><td>6</td><td>6</td><td>5.9</td></tr>
+    </table>
+    <p>画出来一眼就能看出：这六个点差不多躺在一条斜率为 1 的直线上。换句话说，<b>分数几乎完全由时长决定</b>——两列数是同一个信息的两次测量，第二列几乎没带来新东西。</p>
+    <p>那就有一个很实际的问题：既然它们是同一个信息的两次测量，我们能不能<b>只存一个数</b>？把 12 个数压成 6 个数，代价是什么？</p>
+    <p>能不能压，关键看「点在哪个方向上分得最开」。如果所有点都挤在一条线上，那沿着这条线记一个坐标就够了；垂直于它的那个坐标全是噪声，扔掉不心疼。</p>
+    <div class="quote">
+      <b>PCA 的全部思想就一句：</b>找一个方向，把所有点投影过去，让投影后的<b>方差最大</b>。<br>方差大 = 投影后的点分得最开 = 丢掉的信息最少。
+    </div>
+    <p>注意这句话里没有「矩阵」「特征值」——它们是<b>解题工具</b>，不是问题本身。先把问题看清楚，工具才有意义。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span>动手：拖一条线，看哪条最省</h2>
+    <p>下面的图里，六个蓝点是原始数据，红叉是它们的均值点。橙点是把每个点<b>投影</b>到当前方向上的结果，红色虚线是每个点被丢掉的那一段（残差）。</p>
+    <p>拖动角度滑块，试着让六条红虚线加起来最短。</p>
+
+    <div class="fig">
+      <svg id="fig" viewBox="20 40 400 300" role="img" aria-label="PCA 方向与投影的交互图">
+        <defs>
+          <clipPath id="clip"><rect x="20" y="40" width="400" height="300"/></clipPath>
+          <marker id="ah-a" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 z" fill="#a16207"/></marker>
+          <marker id="ah-b" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 z" fill="#1d4ed8"/></marker>
+          <marker id="ah-r" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 z" fill="#9f1239"/></marker>
+        </defs>
+        <g id="scene" clip-path="url(#clip)"></g>
+      </svg>
+      <div class="modebar">
+        <button id="mCenter" class="on">绕均值找方向（正确）</button>
+        <button id="mRaw">绕原点找方向（错）</button>
+      </div>
+      <div class="readout">
+        <span class="pill">θ = <b id="vth">0°</b></span>
+        <span class="pill" id="vsse">残差平方和 = 16.75</span>
+        <span class="pill mid" id="vevr">解释方差 = 0.0%</span>
+      </div>
+      <div class="readout">
+        <span class="pill" id="vgap">离最优 +16.68</span>
+        <span class="pill ok" id="vopt">最优 θ = 44.4°</span>
+      </div>
+      <div class="ctrls">
+        <div class="row"><b>角度 θ</b><input id="st" type="range" min="0" max="180" step="0.5" value="0"><span class="v" id="vt">0°</span></div>
+        <div class="row"></div>
+      </div>
+      <div class="presets" id="presets">
+        <button data-t="0">水平</button>
+        <button data-t="30">30°</button>
+        <button data-t="44.4">跳到最优</button>
+        <button data-t="90">竖直</button>
+      </div>
+      <div class="cap">六个点几乎在 45° 线上。θ = 0° 时几乎所有点都被丢掉（残差很大），转到 44° 左右残差几乎消失——那个方向就是<b>第一主成分</b>。</div>
+    </div>
+
+    <p>你会看到一件事：残差不是「越小越好」那么简单，它在 44.4° 附近有一个<b>光滑的最低点</b>（像个碗），左右两边都上升。这个最低点不是试出来的，它可以用特征分解一次算出来——下面三节就干这件事。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span>三步：中心化 → 协方差 → 特征分解</h2>
+
+    <h3>第一步：中心化（先看清楚「围绕什么」分得开）</h3>
+    <p>为什么不能直接用原始坐标？因为我们要的是「点彼此之间分得多开」，而原始坐标里混着「离原点有多远」。先把所有点平移，让<b>均值落在原点</b>：</p>
+    <div class="eq">均值 μ = (3.5, 3.5167)　　中心化后：aᵢ = pᵢ − μ</div>
+    <div class="def">
+      <span class="term">中心化</span>每个点减去整列的平均值，让数据以均值为中心：<span class="mono">X ← X − mean(X)</span>，<span class="mono">axis=0</span> 表示按列减。
+      <span class="why">这一步只做平移，<b>不改变任何点之间的距离和相对位置</b>，但它决定了后面「原点在哪」。不中心化会怎样：§6 有一个具体的反例，主方向会跑到 45° 上去，而那是「均值的方向」，不是「分得最开的方向」。</span>
+    </div>
+    <p>中心化之后，六个数对（保留三位小数）：</p>
+    <table>
+      <tr><th>学生</th><th>x − 3.5</th><th>y − 3.5167</th></tr>
+      <tr><td>1</td><td>−2.5</td><td>−2.3167</td></tr>
+      <tr><td>2</td><td>−1.5</td><td>−1.6167</td></tr>
+      <tr><td>3</td><td>−0.5</td><td>−0.4167</td></tr>
+      <tr><td>4</td><td>0.5</td><td>0.2833</td></tr>
+      <tr><td>5</td><td>1.5</td><td>1.6833</td></tr>
+      <tr><td>6</td><td>2.5</td><td>2.3833</td></tr>
+    </table>
+
+    <h3>第二步：协方差矩阵（把「分得多开」装进一个矩阵）</h3>
+    <p>「分得多开」用方差量，但这里有两列，所以还要记「它们怎么一起动」。这两件事正好填满一个 2×2 矩阵：</p>
+    <div class="def">
+      <span class="term">协方差矩阵</span>中心化之后 <span class="mono">C = XᵀX / n</span>。对角线上是两列各自的<b>方差</b>，非对角线上是两列的<b>协方差</b>（一起变大还是反向走）。
+      <span class="why">为什么是 XᵀX / n：这正是第 4 课的正规方程里那个 XᵀX——XᵀX 的第 i 行第 j 列 = 第 i 列与第 j 列的内积。所以「协方差 = 两列的内积 ÷ n」，就是内积（第 1 课）在数据上的名字。</span>
+      <span class="warn">分母用 n 还是 n−1：理论推导用 n，无偏估计用 n−1。几万个样本时没区别，六个点时有 20% 的区别。本课统一用 n，代码里 <span class="mono">np.cov</span> 默认用 n−1，注意这个差。特征向量完全不受影响，只有特征值的绝对大小差一点。</span>
+    </div>
+    <p>那五个数在哪？照第 4 课的老规矩，<b>逐个内积算</b>：</p>
+    <table>
+      <tr><th>C 的某个位置</th><th>怎么算</th><th>值</th></tr>
+      <tr><td>C₁₁（x 的方差）</td><td>(−2.5)² + (−1.5)² + … + 2.5² 再 ÷ 6</td><td><b>2.9167</b></td></tr>
+      <tr><td>C₂₂（y 的方差）</td><td>(−2.3167)² + … + 2.3833² 再 ÷ 6</td><td><b>2.7914</b></td></tr>
+      <tr><td>C₁₂ = C₂₁（协方差）</td><td>(−2.5)(−2.3167) + … 再 ÷ 6</td><td><b>2.8417</b></td></tr>
+    </table>
+    <div class="eq">C = [[2.9167, 2.8417], [2.8417, 2.7914]]</div>
+    <p>读一下这个矩阵：两个方差差不多大（2.92 与 2.79），说明两列各自都挺分散；协方差 2.84 几乎是方差本身——<b>说明两列几乎完全同步变化</b>。这正是「它们是一条斜线」的代数说法。</p>
+
+    <h3>第三步：特征分解（方向 = 特征向量，信息量 = 特征值）</h3>
+    <p>协方差矩阵是<b>对称</b>的（C₁₂ = C₂₁），所以第 5 课结论全套可用：两个实特征值、特征向量互相垂直、可以用 <span class="mono">eigh</span>。直接算：</p>
+    <div class="eq">tr = 2.9167 + 2.7914 = 5.7081　　　det = 2.9167×2.7914 − 2.8417² = 0.0648</div>
+    <div class="eq">λ = (5.7081 ± √(5.7081² − 4×0.0648)) / 2 = (5.7081 ± 5.6847) / 2</div>
+    <div class="eq">λ₁ = 5.6964　　λ₂ = 0.0117</div>
+    <p>两个特征值差了一个量级不止：5.70 对 0.01，相差约 <b>487 倍</b>。这说明一件事——<b>数据几乎完全落在一个方向上</b>。</p>
+    <p>对应的方向（已归一化）：<b>v₁ = (0.7149, 0.6993)</b>，也就是约 <b>44.4°</b> 的那条线；v₂ = (−0.6993, 0.7149)，和它垂直。和 §2 里拖出来的最优角度一致。</p>
+
+    <div class="def">
+      <span class="term">主成分</span>协方差矩阵的特征向量。按特征值从大到小排：第一主成分 PC1 是方差最大的方向，第二主成分 PC2 是<b>与 PC1 垂直</b>的方向里方差最大的那个。
+      <span class="why">「垂直」不是巧合：对称矩阵的不同特征值对应的特征向量一定正交（第 5 课）。所以主成分是一组互相垂直的新坐标轴——这就是「换一套坐标系看数据」。</span>
+      <span class="warn">特征向量的方向有两个朝向（v 和 −v 都行）。所以 PCA 算出来的 (0.71, 0.70) 和 (−0.71, −0.70) 是同一个方向；不同软件连符号都可能不一样，别把它当 bug。</span>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">4</span>为什么特征值就是方差：一次推导，两个结论</h2>
+    <p>这一节回答「凭什么说特征向量就是最值钱的方向」。骨架只有三行。</p>
+    <p>设方向是单位向量 <span class="mono">u</span>（长度 1，只关心朝向）。把每个中心化后的点 aᵢ 投到 u 上，投影坐标是 <span class="mono">uᵀaᵢ</span>（第 1 课的内积）。投影后的方差是：</p>
+    <div class="eq">方差(u) = (1/n) Σ (uᵀaᵢ)² = uᵀ [(1/n) Σ aᵢaᵢᵀ] u = uᵀ C u</div>
+    <p>所以我们要解的问题是「在 <span class="mono">‖u‖ = 1</span> 的约束下让 <span class="mono">uᵀCu</span> 最大」。用第 4 课那套「求极值 → 让导数等于 0」的办法（拉格朗日乘子），会得到：</p>
+    <div class="eq">C u = λ u　　（λ 是乘子，也就是特征值）</div>
+    <p>这一行把整件事说完了：<b>最优方向满足「协方差矩阵作用上去只改变长度」——它正是 C 的特征向量。</b>而且把 u 代回目标函数：</p>
+    <div class="eq">uᵀCu = uᵀ(λu) = λ(uᵀu) = λ</div>
+    <div class="quote">
+      <b>两个结论，一次得到：</b>① 让方差最大的方向 = C 的特征向量；② 在那个方向上，<b>方差恰好等于特征值</b>。<br>所以「λ 大」不是数值大，是「这个方向上数据铺得开」。
+    </div>
+    <p>拿我们的数据验一遍。第一主成分方向上的投影坐标是：</p>
+    <table>
+      <tr><th>学生</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr>
+      <tr><td>投影坐标</td><td>−3.4071</td><td>−2.2028</td><td>−0.6488</td><td>0.5556</td><td>2.2494</td><td>3.4537</td></tr>
+    </table>
+    <p>这六个数平方和 ÷ 6 = <b>5.6964</b>，正好等于 λ₁。这不是巧合，是上面那个等式。</p>
+    <div class="def">
+      <span class="term">解释方差比</span>某个主成分的方差占总方差的比例：<span class="mono">λᵢ / Σλⱼ</span>。也就是「这一维吃掉了多少信息」。
+      <span class="why">总方差 = 所有特征值之和 = tr(C)（第 5 课的迹）。我们的数据：5.6964 + 0.0117 = 5.7081 = 2.9167 + 2.7914 ✓。</span>
+      <span class="warn">别把它读成「准确率」：99.8% 说的是「这两列数里 99.8% 的波动，能被一个方向解释」，不是「预测对了 99.8%」。</span>
+    </div>
+    <p>所以：<b>PC1 吃掉 5.6964 / 5.7081 = 99.8%，PC2 只剩 0.2%。</b>压到一维，基本上什么都没丢。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">5</span>压到一维：投影、重构、算清损失</h2>
+    <p>「降维」在操作上就是两行：</p>
+    <div class="eq">降维：t = X · v₁　（每个点变成一个数）　　重构：X̂ = t · v₁ᵀ + μ　（再从数变回点）</div>
+    <p>我们的数据压缩后是六个坐标（上面那张表），再按下面的公式还原：</p>
+    <table>
+      <tr><th>学生</th><th>原来 (x, y)</th><th>压成 1 个数</th><th>还原回 (x̂, ŷ)</th><th>差了多少</th></tr>
+      <tr><td>1</td><td>(1, 1.2)</td><td>−3.4071</td><td>(1.0644, 1.1342)</td><td>几乎没差</td></tr>
+      <tr><td>2</td><td>(2, 1.9)</td><td>−2.2028</td><td>(1.9253, 1.9763)</td><td>几乎没差</td></tr>
+      <tr><td>3</td><td>(3, 3.1)</td><td>−0.6488</td><td>(3.0362, 3.0630)</td><td>几乎没差</td></tr>
+      <tr><td>4</td><td>(4, 3.8)</td><td>0.5556</td><td>(3.8971, 3.9051)</td><td>几乎没差</td></tr>
+      <tr><td>5</td><td>(5, 5.2)</td><td>2.2494</td><td>(5.1080, 5.0896)</td><td>几乎没差</td></tr>
+      <tr><td>6</td><td>(6, 5.9)</td><td>3.4537</td><td>(5.9690, 5.9317)</td><td>几乎没差</td></tr>
+    </table>
+    <p>损失用重构误差量（就是每个点被丢掉那一段的长度平方之和）：</p>
+    <div class="eq">SSE = 0.0700　　总方差 = 34.2483　　残差占比 = 0.204%</div>
+    <p class="small">注意这两个数不是一回事：99.8% 是「每个方向上的方差比」，0.204% 是「按样本点算的总平方误差占比」。它们互为补数（0.204% ≈ 1 − 99.8%），因为用 PC1 重构丢掉的正是在 PC2 上的分量。</p>
+    <div class="def">
+      <span class="term">重构误差</span>压到 k 维再还原，与原始数据的差：<span class="mono">‖X − X̂‖²</span>。它等于被丢掉的那些主成分的方差之和（乘 n）。
+      <span class="why">实用意义：它告诉你「降维到底损失了多少」。如果残差占比 0.2%，那用一维代替二维是划算的；如果残差占 40%，那压下去就伤筋动骨了。</span>
+    </div>
+    <p>再回看 §2 那张图：把角度从 0° 拖到 45°，残差平方和从 16.75 掉到 0.07（0° → 16.7483、30° → 2.1705、40° → 0.2679、45° → 0.0742、90° → 17.5）。这个「碗」的最低点在 44.4°，不是 45——因为数据并不完全在 45° 上，而是 44.4°。差这 0.6°，就是 PC1 和「斜率 1」的区别。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">6</span>反例：不中心化会找到什么</h2>
+    <p>同样的数据，如果跳过中心化、直接对原始点求「离原点最能解释的方向」，也就是用没减均值的 <span class="mono">S = PᵀP / n</span>：</p>
+    <div class="eq">S = [[15.1667, 15.1500], [15.1500, 15.1583]]　⟹　λ = 30.3125 和 0.0125</div>
+    <p>第一主成分的方向是 (0.7072, 0.7070)，也就是<b>整整 45°</b>——正好指向「均值点 (3.5, 3.52) 的方向」。解释方差比 99.96%，比中心化之后的 99.8% 还「好看」。</p>
+    <p>但它错了，错在两个地方：</p>
+    <table>
+      <tr><th></th><th>绕均值（正确）</th><th>绕原点（错误）</th></tr>
+      <tr><td>PC1 方向</td><td>44.4°，贴着数据的走向</td><td>45.0°，指向「数据离原点有多远」</td></tr>
+      <tr><td>它回答的问题</td><td>点彼此之间怎么散开</td><td>点离原点有多远</td></tr>
+      <tr><td>换个坐标原点会怎样</td><td>不变（平移不改变相对位置）</td><td>全变，结果没有意义</td></tr>
+    </table>
+    <p class="small">这个反例还顺带解释了为什么「解释方差比越高越好」是错的读法：99.96% 那个数字更漂亮，却是假象——因为均值把原点推远了，30.31 里绝大部分是「均值的长度」，不是「数据的散布」。</p>
+    <div class="quote">
+      <b>一句话：</b>PCA 找的是「围绕均值的散布」，不是「离原点多远」。<br>所以 <span class="mono">X − X.mean(axis=0)</span> 这一步永远不能省。
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">7</span>五个坑：真正用的时候会踩到</h2>
+    <table>
+      <tr><th>坑</th><th>为什么</th><th>怎么办</th></tr>
+      <tr><td><b>量纲不同</b></td><td>「时长（小时）」和「分数（分）」的数值尺度差几十倍，方差大的那列自动当第一主成分，跟重要性无关</td><td>先标准化：<span class="mono">(X − μ) / σ</span>，每列方差归一。这时的 PCA 等价于对相关矩阵做特征分解</td></tr>
+      <tr><td><b>特征值接近</b></td><td>两个方向方差差不多时，把 PC1/PC2 固定下来是不稳的：数据抖一点，方向就大幅旋转</td><td>别硬解读单个方向，改成看子空间（前两个一起看）</td></tr>
+      <tr><td><b>数据非线性</b></td><td>PCA 只能找直线方向。数据要是弯的（S 形、圆环），它会给出误导的答案</td><td>换核 PCA、t-SNE、UMAP——本课不管它们</td></tr>
+      <tr><td><b>把解释方差当预测力</b></td><td>「前两维解释了 95% 的波动」不等于「能预测 95% 的目标」</td><td>预测力要单独做交叉验证，跟方差是两回事</td></tr>
+      <tr><td><b>样本太少</b></td><td>n 个样本最多只有 n−1 个非零主成分；六个点算出来的 2×2 协方差本身就很吵</td><td>样本数至少是维度的很多倍，否则保留的主成分数要更保守</td></tr>
+    </table>
+    <p class="small">还有一个更隐蔽的：<b>先做 PCA 再用结论做别的统计</b>，会让置信区间变乐观（因为方向是从同一批数据里挑的）。严格做法是把选方向放在训练集里做，再套到测试集上。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">8</span>工具表：numpy 里十行就够</h2>
+    <table>
+      <tr><th>要什么</th><th>写法</th><th>说明</th></tr>
+      <tr><td>中心化</td><td><span class="mono">X - X.mean(axis=0)</span></td><td><span class="mono">axis=0</span> 是按列（每个特征各自减自己的均值）</td></tr>
+      <tr><td>协方差矩阵</td><td><span class="mono">np.cov(Xc, rowvar=False)</span></td><td>默认除以 n−1；<span class="mono">rowvar=False</span> 表示「一列是一个变量」</td></tr>
+      <tr><td>特征分解</td><td><span class="mono">w, V = np.linalg.eigh(C)</span></td><td>协方差是对称矩阵，<b>必须用 eigh</b>：升序、实数、向量正交</td></tr>
+      <tr><td>取主成分</td><td><span class="mono">V[:, ::-1][:, :k]</span></td><td>eigh 是升序，先反过来取前 k 列</td></tr>
+      <tr><td>降维 / 重构</td><td><span class="mono">T = Xc @ Vk</span> / <span class="mono">Xc @ Vk @ Vk.T</span></td><td>两条都是矩阵乘法，没有循环</td></tr>
+      <tr><td>SVD 等价做法</td><td><span class="mono">U, s, Vt = np.linalg.svd(Xc)</span></td><td>更稳定，s²/n 就是特征值；数据大时用这个</td></tr>
+    </table>
+    <div class="def">
+      <span class="term">累计解释方差</span>从最大往下累加 <span class="mono">λᵢ / Σλ</span>，用来决定「压到几维」。常见做法：累计超过 90% 或 95% 就停。
+      <span class="why">例：两个特征值时累计是 99.8% 和 100%。如果数据有 50 维，通常前 5–10 维就能到 95%——这就是 PCA 在图像、文本、基因数据里天天被用的原因。</span>
+      <span class="warn">90% 是个经验阈值，不是定理。要压缩存储可以激进一点，要保留可解释性就保守一点；报出来的是「我选了 k 维，累计解释了 x% 方差」。</span>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">9</span>能跑的代码：完整一遍</h2>
+    <pre><span class="c"># 六个点，两列：时长、分数</span>
+<span class="k">import</span> numpy <span class="k">as</span> np
+X = np.array([[<span class="s">1.</span>, <span class="s">1.2</span>], [<span class="s">2.</span>, <span class="s">1.9</span>], [<span class="s">3.</span>, <span class="s">3.1</span>],
+              [<span class="s">4.</span>, <span class="s">3.8</span>], [<span class="s">5.</span>, <span class="s">5.2</span>], [<span class="s">6.</span>, <span class="s">5.9</span>]])
+
+<span class="c"># 1) 中心化（不能省）</span>
+mu = X.mean(axis=<span class="s">0</span>)            <span class="c"># [3.5    3.5167]</span>
+Xc = X - mu
+
+<span class="c"># 2) 协方差矩阵（这里故意用 n，和正文一致）</span>
+C = Xc.T @ Xc / <span class="k">len</span>(X)
+<span class="k">print</span>(C)                        <span class="c"># [[2.9167 2.8417] [2.8417 2.7914]]</span>
+
+<span class="c"># 3) 特征分解（对称矩阵必须用 eigh）</span>
+w, V = np.linalg.eigh(C)
+w = w[::-<span class="s">1</span>]; V = V[:, ::-<span class="s">1</span>]    <span class="c"># 变成从大到小</span>
+<span class="k">print</span>(w)                        <span class="c"># [5.6964 0.0117]</span>
+<span class="k">print</span>(w / w.sum())              <span class="c"># [0.998 0.002] 解释方差比</span>
+<span class="k">print</span>(V[:, <span class="s">0</span>])                 <span class="c"># 第一主成分方向 (0.715, 0.699)</span>
+<span class="k">print</span>(np.degrees(np.arctan2(V[<span class="s">0</span>, <span class="s">1</span>], V[<span class="s">0</span>, <span class="s">0</span>])))   <span class="c"># 44.4 度</span>
+
+<span class="c"># 4) 降维到 1 维，再重构，算损失</span>
+t = Xc @ V[:, <span class="s">0</span>]                <span class="c"># 六个投影坐标</span>
+rec = np.outer(t, V[:, <span class="s">0</span>]) + mu
+sse = ((X - rec) ** <span class="s">2</span>).sum()
+<span class="k">print</span>(t.round(<span class="s">4</span>))               <span class="c"># [-3.4071 -2.2028 -0.6488  0.5556  2.2494  3.4537]</span>
+<span class="k">print</span>(rec.round(<span class="s">4</span>))
+<span class="k">print</span>(sse, sse / ((Xc) ** <span class="s">2</span>).sum())   <span class="c"># 0.0700, 0.00204 -> 只剩 0.204%</span>
+
+<span class="c"># 5) 顺手验证：投影坐标的方差 = λ1</span>
+<span class="k">print</span>(t.var())                   <span class="c"># 5.6964，正好是第一个特征值</span></pre>
+    <p class="small">最后一行的 <span class="mono">t.var()</span> 是 §4 那个结论的实测：投影后的方差 = 特征值。可以把它当成「PCA 算对了没有」的一键检查。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">10</span>练习：六道，做完对答案</h2>
+    <p class="small">题型：① 手算 ② 手算 ③ 判断 ④ 应用 ⑤ 找错 ⑥ 写代码。②④ 要动手算，③⑤ 是概念陷阱。</p>
+
+    <div class="ex">
+      <b>1.</b> 三个点 (1, 1)、(2, 3)、(3, 2)。求均值、中心化后的矩阵、协方差矩阵。
+      <details><summary>看答案</summary>
+        <p>均值 = (2, 2)。中心化后：(−1, −1)、(0, 1)、(1, 0)。</p>
+        <p>协方差 C = XᵀX/3，逐个内积：C₁₁ = (1+0+1)/3 = 2/3 ≈ 0.6667；C₂₂ = (1+1+0)/3 = 2/3 ≈ 0.6667；C₁₂ = (1·1 + 0·1 + 1·0)/3 = 1/3 ≈ 0.3333。</p>
+        <p>C = [[0.6667, 0.3333], [0.3333, 0.6667]]。</p>
+      </details>
+    </div>
+
+    <div class="ex">
+      <b>2.</b> 接上题：求特征值和特征向量，并说出解释方差比。
+      <details><summary>看答案</summary>
+        <p>tr = 4/3、det = (2/3)² − (1/3)² = 4/9 − 1/9 = 3/9 = 1/3。所以 λ² − (4/3)λ + 1/3 = 0 → 3λ² − 4λ + 1 = 0 → λ = 1 和 λ = 1/3。</p>
+        <p>λ = 1 的方向：解 (C − I)v = 0，得到 x = y，所以 v₁ = (1, 1)/√2（45°）。λ = 1/3 的方向 (1, −1)/√2。</p>
+        <p>解释方差比：1/(1 + 1/3) = <b>75%</b> 和 25%。压到一维会丢掉 25% 的波动——比正文那组数据差很多，因为这三点根本没排成一条线。</p>
+      </details>
+    </div>
+
+    <div class="ex">
+      <b>3.</b> 判断题：如果数据全部落在一条直线上（比如 (1,2)、(2,4)、(3,6)），第二主成分的特征值是多少？为什么？
+      <details><summary>看答案</summary>
+        <p><b>恰好是 0。</b>因为这三点中心化后是 (−1,−1)、(0,0)、(1,1)，全都沿 (1,1) 方向，垂直于它的方向上一个点也没有——投影过去全是 0，方差自然是 0。</p>
+        <p>算一下：C = [[2/3, 4/3], [4/3, 8/3]]，tr = 10/3、det = 0，所以 λ = 10/3 和 <b>0</b> ✓。这也说明「特征值为 0 ⟺ 那个方向没有数据」，和第 5 课「特征值为 0 ⟺ 方向被压成零」是同一件事。</p>
+      </details>
+    </div>
+
+    <div class="ex">
+      <b>4.</b> 接练习 1、2：把三个点压到 PC1 上，写出三个投影坐标；再把它们还原，算重构误差。
+      <details><summary>看答案</summary>
+        <p>投影坐标 t = Xc · v₁，v₁ = (0.7071, 0.7071)：(−1,−1)→<b>−1.4142</b>；(0,1)→<b>0.7071</b>；(1,0)→<b>0.7071</b>。</p>
+        <p>还原：t·v₁ᵀ + μ → (1,1)、(2.5,2.5)、(2.5,2.5)。原始点是 (1,1)、(2,3)、(3,2)。</p>
+        <p>重构误差平方和 = 0 + (0.5² + 0.5²) + (0.5² + 0.5²) = 1.0。总方差（平方和）= 2 + 1 + 1 = 4，所以残差占 25%，和「解释方差 75%」对得上 ✓。</p>
+      </details>
+    </div>
+
+    <div class="ex">
+      <b>5.</b> 有人说：「我的 PCA 第一主成分解释了 99.9% 的方差，所以这个方向一定很有意义。」哪里可能出问题？至少说出两种检查。
+      <details><summary>看答案</summary>
+        <p>可能的问题：① <b>没中心化</b>——那样 PC1 会指向均值方向，比例虚高（正文 §6 的 99.96% 就是假象）；② <b>量纲没统一</b>——某一列的数值尺度远大于其它列，它自动当主成分；③ <b>数据本身接近一维</b>（共线、几乎重复的列），那 99.9% 是在说「你重复采集了同一个东西」。</p>
+        <p>两种检查：先看中心化前后结果差多少；再画一下前几个主成分的散点图，看它是不是只反映某一列的尺度。</p>
+      </details>
+    </div>
+
+    <div class="ex">
+      <b>6.</b> 写代码：对正文那六个点做 PCA，打印两个主成分方向、解释方差比、以及压到一维的残差占比，并验证「投影坐标的方差 = 第一个特征值」。
+      <details><summary>看答案</summary>
+<pre><span class="k">import</span> numpy <span class="k">as</span> np
+X = np.array([[<span class="s">1.</span>,<span class="s">1.2</span>],[<span class="s">2.</span>,<span class="s">1.9</span>],[<span class="s">3.</span>,<span class="s">3.1</span>],
+              [<span class="s">4.</span>,<span class="s">3.8</span>],[<span class="s">5.</span>,<span class="s">5.2</span>],[<span class="s">6.</span>,<span class="s">5.9</span>]])
+Xc = X - X.mean(axis=<span class="s">0</span>)
+C = Xc.T @ Xc / <span class="k">len</span>(X)
+w, V = np.linalg.eigh(C)
+w, V = w[::-<span class="s">1</span>], V[:, ::-<span class="s">1</span>]
+<span class="k">print</span>(V[:, <span class="s">0</span>])                 <span class="c"># [0.7149 0.6993]</span>
+<span class="k">print</span>(w / w.sum())              <span class="c"># [0.998 0.002]</span>
+t = Xc @ V[:, <span class="s">0</span>]
+rec = np.outer(t, V[:, <span class="s">0</span>]) + X.mean(axis=<span class="s">0</span>)
+<span class="k">print</span>(((X - rec)**<span class="s">2</span>).sum() / (Xc**<span class="s">2</span>).sum())   <span class="c"># 0.00204</span>
+<span class="k">print</span>(np.isclose(t.var(), w[<span class="s">0</span>]))       <span class="c"># True</span></pre>
+      </details>
+    </div>
+  </section>
+
+  <div class="next">
+    <b>明天的问题：</b>到这里「空间」这一段就收尾了——向量、内积、矩阵、行列式、秩、特征值、PCA，一条线串完了。下一步是「变化」：<b>输入动一点，输出动多少</b>。导数是这件事的答案，而 PCA 里那个「找让某个量最大的方向」的做法，会原封不动地变成梯度上升。第 7 课从斜率开始。
+  </div>
+
+  <section>
+    <h2><span class="n">11</span>收尾：四个问题，答上来就算学会</h2>
+    <div class="ex">
+      <b>① PCA 到底在优化什么？</b>
+      <details><summary>看答案</summary>在找一个单位方向，让数据投影上去以后<b>方差最大</b>（等价地：让被丢掉的残差平方和最小）。两个说法是同一件事的两面。</details>
+    </div>
+    <div class="ex">
+      <b>② 为什么协方差矩阵的特征向量就是答案？</b>
+      <details><summary>看答案</summary>因为投影后的方差可以写成 uᵀCu。让它最大得到的条件恰好是 Cu = λu——也就是「u 是 C 的特征向量、λ 是那个方向上的方差」。这是第 4 课「求极值让导数为 0」的同一套路，只是变量变成了一整个方向。</details>
+    </div>
+    <div class="ex">
+      <b>③ 为什么必须先中心化？</b>
+      <details><summary>看答案</summary>不中心化时，原点被人为地放在别处，你最大化的是「离原点有多远」，而不是「点彼此分得多开」；平移数据结果就会变，说明这个答案不描述数据结构。正文 §6 的 99.96% 就是这种假象。</details>
+    </div>
+    <div class="ex">
+      <b>④ 解释方差 99% 能说明模型好吗？</b>
+      <details><summary>看答案</summary>不能。它只说「数据的大部分波动能用少数几个方向表示」，不说这些方向与你关心的目标有关，也不说预测准确率。模型好不好要另做验证。</details>
+    </div>
+  </section>
+
+  <div class="pager">
+    <a href="lesson-05.html">← 第 5 课：特征值与特征向量</a>
+    <a href="index.html">回路线图</a>
+    <span style="color:var(--muted)">第 7 课：导数与敏感度（待解锁）</span>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var NS='http://www.w3.org/2000/svg';
+  var S=30, OX=110, OY=300;
+  var scene=document.getElementById('scene');
+  function $(id){return document.getElementById(id);}
+  function mk(tag,attrs){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);return e;}
+  function X(v){return OX+S*v;}
+  function Y(v){return OY-S*v;}
+  function clear(){while(scene.firstChild)scene.removeChild(scene.firstChild);}
+  function line(x1,y1,x2,y2,color,w,dash){
+    var a={'x1':X(x1),'y1':Y(y1),'x2':X(x2),'y2':Y(y2),'stroke':color,'stroke-width':w||1.5};
+    if(dash)a['stroke-dasharray']=dash;
+    scene.appendChild(mk('line',a));
+  }
+  function dot(x,y,color,r){scene.appendChild(mk('circle',{'cx':X(x),'cy':Y(y),'r':r||5,'fill':color}));}
+  function label(x,y,txt,color,size){
+    var t=mk('text',{'x':X(x),'y':Y(y),'fill':color||'#3c4a5e','font-size':size||12,'font-family':'JetBrains Mono, monospace'});
+    t.textContent=txt;scene.appendChild(t);
+  }
+  function grid(){
+    for(var i=0;i<=7;i++){
+      line(i,0,i,7,'#eae5d8',1);
+      line(0,i,7,i,'#eae5d8',1);
+    }
+    line(0,0,7,0,'#8e9aad',1.4);
+    line(0,0,0,7,'#8e9aad',1.4);
+    label(6.7,-0.35,'x','#8e9aad',12);
+    label(-0.55,6.7,'y','#8e9aad',12);
+  }
+
+  var PX=[1,2,3,4,5,6], PY=[1.2,1.9,3.1,3.8,5.2,5.9];
+  var MU=[3.5,3.5167], BEST=44.4;
+
+  function center(mode){
+    if(mode==='raw')return [0,0];
+    return MU;
+  }
+
+  function stats(th,mode){
+    var c=center(mode);
+    var ux=Math.cos(th), uy=Math.sin(th);
+    var sse=0, pts=[];
+    for(var i=0;i<PX.length;i++){
+      var dx=PX[i]-c[0], dy=PY[i]-c[1];
+      var t=dx*ux+dy*uy;
+      var rx=dx-t*ux, ry=dy-t*uy;
+      sse+=rx*rx+ry*ry;
+      pts.push({t:t,x:c[0]+t*ux,y:c[1]+t*uy,dx:dx,dy:dy});
+    }
+    var total=0;
+    for(var j=0;j<PX.length;j++){
+      var ex=PX[j]-c[0], ey=PY[j]-c[1];
+      total+=ex*ex+ey*ey;
+    }
+    return {sse:sse,total:total,pts:pts,c:c,ux:ux,uy:uy};
+  }
+
+  var mode='center';
+  function render(){
+    clear(); grid();
+    var th=parseFloat($('st').value)*Math.PI/180;
+    var s=stats(th,mode);
+    var c=s.c;
+
+    // 方向线
+    var L=9;
+    line(c[0]-L*s.ux,c[1]-L*s.uy,c[0]+L*s.ux,c[1]+L*s.uy,'#a16207',2.2);
+
+    // 残差虚线
+    for(var i=0;i<s.pts.length;i++){
+      var p=s.pts[i];
+      line(PX[i],PY[i],p.x,p.y,'#e3a3b3',1.4,'4 4');
+    }
+    // 投影点
+    for(var k=0;k<s.pts.length;k++) dot(s.pts[k].x,s.pts[k].y,'#a16207',4);
+    // 原始点
+    for(var m=0;m<PX.length;m++) dot(PX[m],PY[m],'#1d4ed8',5);
+    // 均值
+    if(mode==='center'){
+      line(c[0]-0.18,c[1],c[0]+0.18,c[1],'#9f1239',1.6);
+      line(c[0],c[1]-0.18,c[0],c[1]+0.18,'#9f1239',1.6);
+      label(c[0]+0.2,c[1]+0.35,'μ','#9f1239',12);
+    }else{
+      dot(0,0,'#9f1239',4.5);
+      label(0.2,-0.4,'原点','#9f1239',11);
+    }
+
+    var evr=1-s.sse/s.total;
+    $('vth').textContent=parseFloat($('st').value).toFixed(1)+'°';
+    $('vsse').textContent='残差平方和 = '+s.sse.toFixed(2);
+    var e=$('vevr');
+    e.textContent='解释方差 = '+(evr*100).toFixed(1)+'%';
+    e.className='pill '+(evr>0.99?'ok':'mid');
+    var bestSse=stats(BEST*Math.PI/180,mode).sse;
+    var g=$('vgap');
+    g.textContent='离最优 +'+(s.sse-bestSse).toFixed(2);
+    g.className='pill '+(s.sse-bestSse<0.005?'ok':'mid');
+    $('vopt').textContent=mode==='center'?'最优 θ = 44.4°':'不中心化时 θ = 45°';
+  }
+
+  $('st').addEventListener('input',function(){
+    $('vt').textContent=parseFloat($('st').value).toFixed(1)+'°';
+    render();
+  });
+
+  function applyMode(){
+    $('mCenter').className=(mode==='center')?'on':'';
+    $('mRaw').className=(mode==='raw')?'on':'';
+    render();
+  }
+  $('mCenter').addEventListener('click',function(){mode='center';applyMode();});
+  $('mRaw').addEventListener('click',function(){mode='raw';applyMode();});
+
+  $('presets').addEventListener('click',function(ev){
+    var b=ev.target; if(!b.dataset||!b.dataset.t)return;
+    $('st').value=parseFloat(b.dataset.t);
+    $('vt').textContent=parseFloat(b.dataset.t).toFixed(1)+'°';
+    render();
+  });
+
+  var q=new URLSearchParams(location.search);
+  if(q.get('t')){$('st').value=q.get('t');$('vt').textContent=parseFloat(q.get('t')).toFixed(1)+'°';}
+  if(q.get('m')==='raw')mode='raw';
+  applyMode();
+  window.__stats=stats;
+})();
+</script>
+</body>
+</html>
