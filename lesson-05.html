@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 5 课 · 特征值与特征向量：变换里不动的那几条线</title>
+<style>
+  :root{
+    --bg:#f7f5ef; --card:#fffdf8; --ink:#16233a; --muted:#5b6b7f;
+    --line:#e3ded2; --line2:#d2cbbb;
+    --teal:#0d6f6a; --blue:#1d4ed8; --amber:#a16207; --rose:#9f1239; --violet:#5b21b6;
+    --mono:'JetBrains Mono','DejaVu Sans Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--bg);color:var(--ink);font-family:'Noto Sans CJK SC','Source Han Sans SC','Microsoft YaHei',sans-serif;line-height:1.78;font-size:16px}
+  .wrap{max-width:820px;margin:0 auto;padding:0 22px 90px}
+  a{color:var(--blue)}
+
+  .topnav{display:flex;justify-content:space-between;font-size:13px;padding:18px 0 0;color:var(--muted)}
+  .topnav a{text-decoration:none}
+
+  header{padding:26px 0 26px;border-bottom:1px solid var(--line2);margin-bottom:34px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .tag{font-size:12px;padding:3px 10px;border-radius:999px;background:#e9f0ef;color:var(--teal);font-weight:700;letter-spacing:.04em}
+  .tag.b{background:#e8ecfb;color:var(--blue)}
+  .tag.c{background:#f6eadd;color:var(--amber)}
+  h1{font-size:clamp(26px,4.6vw,36px);line-height:1.25;font-weight:800;letter-spacing:.01em}
+  .sub{color:var(--muted);font-size:16px;margin-top:8px}
+  .sub b{color:var(--ink)}
+
+  .goal{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:0 12px 12px 0;padding:16px 20px;margin-top:20px;font-size:14.5px}
+  .goal b{color:var(--teal)}
+
+  section{margin-bottom:44px}
+  h2{font-size:13px;letter-spacing:.16em;color:var(--muted);font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+  h2 .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;letter-spacing:0;flex:none}
+  h2::after{content:"";flex:1;height:1px;background:var(--line)}
+  h3{font-size:19px;font-weight:800;margin:18px 0 8px}
+  p{color:#33415a;margin-bottom:12px}
+  p b{color:var(--ink)}
+  .big{font-size:18.5px;line-height:1.85;color:var(--ink)}
+  em{font-style:normal;color:var(--teal);font-weight:700}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:16px 0}
+  .quote{background:#fbf8f0;border:1px dashed var(--line2);border-radius:12px;padding:16px 20px;font-size:15px;color:#4a5468;margin:16px 0}
+  .quote b{color:var(--amber)}
+  .small{font-size:13.5px;color:var(--muted)}
+  ul,ol{margin:10px 0 14px;padding-left:22px}
+  li{margin-bottom:6px;color:#3a475c}
+
+  /* 定义卡：本课新增，每个新概念的第一次出现都配一张 */
+  .def{background:#f2f6fb;border:1px solid #d8e2ef;border-left:4px solid var(--blue);border-radius:0 12px 12px 0;padding:14px 18px;margin:16px 0;font-size:14.5px;color:#33415a}
+  .def .term{display:inline-block;font-weight:800;color:var(--blue);margin-right:8px;font-size:15px;letter-spacing:.02em}
+  .def .why{display:block;margin-top:7px;font-size:13.5px;color:var(--muted)}
+  .def .warn{display:block;margin-top:7px;font-size:13.5px;color:var(--rose)}
+
+  /* 交互图 */
+  .fig{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 16px 10px;margin:18px 0}
+  .fig svg{display:block;width:100%;max-width:520px;height:auto;margin:0 auto}
+  .fig .cap{font-size:12.5px;color:var(--muted);text-align:center;padding:6px 0 8px}
+  .readout{display:flex;gap:8px;flex-wrap:wrap;padding:0 6px 12px;font-size:13px;justify-content:center}
+  .pill{font-family:var(--mono);background:#eef2f7;color:#1f3a68;padding:4px 10px;border-radius:7px}
+  .pill.warn{background:#fdecec;color:#9f1239}
+  .pill.ok{background:#e9f0ef;color:#0d6f6a}
+  .pill.mid{background:#f6eadd;color:#a16207}
+
+  .modebar{display:flex;gap:8px;justify-content:center;padding:2px 4px 10px}
+  .modebar button{font:inherit;font-size:13px;padding:6px 16px;border-radius:999px;border:1px solid var(--line2);background:#f4f1e8;color:#3c4a5e;cursor:pointer;transition:background .15s}
+  .modebar button:hover{background:#e9e4d6}
+  .modebar button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  .ctrls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px 20px;padding:6px 4px}
+  .ctrls .row{display:flex;align-items:center;gap:9px;font-size:13px;color:#3c4a5e}
+  .ctrls .row b{font-family:var(--mono);width:12px;color:#16233a;text-align:center}
+  .ctrls .row input{flex:1;min-width:60px;accent-color:#1d4ed8}
+  .ctrls .row .v{font-family:var(--mono);width:42px;text-align:right;font-size:12.5px;color:#1f3a68}
+  .presets{display:flex;flex-wrap:wrap;gap:8px;padding:10px 4px 12px;justify-content:center}
+  .presets button{font:inherit;font-size:12.5px;padding:5px 13px;border-radius:999px;border:1px solid var(--line2);background:#f4f1e8;color:#3c4a5e;cursor:pointer;transition:background .15s}
+  .presets button:hover{background:#e9e4d6}
+  .presets button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  /* 公式 */
+  .math{font-family:'Times New Roman','DejaVu Serif',serif;font-size:17.5px}
+  .eq{display:block;text-align:center;background:#f3f1e9;border-radius:10px;padding:14px 12px;margin:14px 0;font-family:'Times New Roman','DejaVu Serif',serif;font-size:19px;letter-spacing:.02em;overflow-x:auto;white-space:nowrap}
+
+  table{width:100%;border-collapse:collapse;font-size:14.5px;margin:14px 0;background:var(--card)}
+  th,td{padding:11px 13px;border:1px solid var(--line);text-align:left;vertical-align:top;line-height:1.6}
+  th{background:#efece3;font-size:12.5px;letter-spacing:.05em;color:#3c4a5e;font-weight:700}
+  td:first-child{white-space:nowrap;font-weight:700;color:var(--teal)}
+  .mono{font-family:var(--mono);font-size:13.5px}
+
+  .matshow{display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--mono);font-size:15px;margin:16px 0}
+  .matshow .cells{display:grid;grid-template-columns:60px 60px;text-align:center;row-gap:2px}
+  .matshow .br{font-family:'Times New Roman','DejaVu Serif',serif;font-size:46px;line-height:.85;color:#46536b;font-weight:400}
+  .matshow .nm{font-family:'Times New Roman',serif;font-size:17px;margin-right:4px}
+  .matshow .cells.one{grid-template-columns:56px}
+
+  pre{background:#152034;color:#e6edf7;border-radius:12px;padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;line-height:1.65;margin:14px 0}
+  pre .c{color:#7d8fa8}
+  pre .k{color:#8fd3ff}
+  pre .s{color:#ffd479}
+  code{font-family:var(--mono);font-size:13.5px;background:#eef2f7;padding:1px 6px;border-radius:5px;color:#1f3a68}
+
+  /* 练习 */
+  .ex{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0}
+  .ex .q{font-weight:700;color:var(--ink);font-size:15.5px;margin-bottom:6px;display:flex;gap:10px}
+  .ex .q .qn{color:var(--blue);font-family:var(--mono);flex:none}
+  .ex .hint{font-size:13.5px;color:var(--muted)}
+  details{margin-top:10px;border-top:1px dashed var(--line2);padding-top:10px}
+  summary{cursor:pointer;font-size:13.5px;font-weight:700;color:var(--teal);list-style:none;user-select:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸ ";display:inline-block;transition:transform .15s}
+  details[open] summary::before{transform:rotate(90deg)}
+  details .ans{margin-top:10px;font-size:14.5px;color:#3a475c}
+  details .ans .step{color:var(--muted);font-size:13.5px;display:block;margin-top:4px}
+
+  /* 明日问题 */
+  .next{background:var(--ink);color:#f4f1e8;border-radius:16px;padding:26px 26px}
+  .next h3{color:#fff;font-size:19px;margin:0 0 8px}
+  .next p{color:#c3ccdb;font-size:15px;margin:0}
+  .next b{color:#ffe7a8}
+  .next .q{color:#ffe7a8;font-style:normal;font-weight:700}
+
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:46px;padding-top:20px;border-top:1px solid var(--line2);font-size:14px}
+
+  /* 复习卡 */
+  .recall{background:#f0f5f4;border:1px solid #d3e3df;border-radius:12px;padding:16px 20px;font-size:14.5px}
+  .recall b{color:var(--teal)}
+  .recall ol{margin:8px 0 0 20px}
+  .recall li{margin-bottom:5px;color:#3a475c}
+
+  @media (max-width:640px){
+    body{font-size:15px}
+    .wrap{padding:0 16px 70px}
+    header{padding-top:18px}
+    .eq{font-size:16px;white-space:normal}
+    table{font-size:13.5px}
+    th,td{padding:9px 10px}
+    td:first-child{white-space:normal}
+    .ctrls{grid-template-columns:1fr 1fr}
+    .matshow .cells{grid-template-columns:48px 48px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topnav">
+    <a href="lesson-04.html">← 第 4 课</a>
+    <span>第 5 课 / 阶段 1 · 空间</span>
+  </div>
+
+  <header>
+    <div class="meta">
+      <span class="tag">第 5 课</span>
+      <span class="tag b">线性代数 · 结构</span>
+      <span class="tag c">55 分钟 · 可拆两天</span>
+    </div>
+    <h1>特征值与特征向量：变换里不动的那几条线</h1>
+    <p class="sub">前四课一直在问「怎么把向量投到某个方向上」。这一课反过来问：<b>哪些方向根本不用投</b>——矩阵作用上去，方向不变，只改长度。</p>
+    <div class="goal">
+      <b>学完你能：</b>从 <span class="mono">Av = λv</span> 读出「不动方向 + 拉伸倍数」；用 <span class="mono">det(A − λI) = 0</span> 手算 2×2 的特征值；用 <span class="mono">λ₁+λ₂ = tr</span>、<span class="mono">λ₁λ₂ = det</span> 十秒验算；分辨「两个实根 / 重根但只有一个方向 / 一个都没有 / 有一个是 0」四种情形；说清 <span class="mono">Aᵏv = λᵏv</span> 为什么让「算 k 次」变成「乘一个数」。
+    </div>
+  </header>
+
+  <div class="recall">
+    <b>这一课的路怎么走：六级台阶（每一级只解决一件事）</b>
+    <ol>
+      <li><b>先看现象</b>：把同一个矩阵反复作用在一个向量上，你会看到它悄悄转向某个固定方向。</li>
+      <li><b>命名</b>：方向不变、长度乘 λ 的那些向量，叫特征向量；那个倍数叫特征值。</li>
+      <li><b>手算</b>：把 <span class="mono">Av = λv</span> 改写成 <span class="mono">(A − λI)v = 0</span>，用第 3 课的「行列式为 0」解出 λ。</li>
+      <li><b>验算</b>：迹 = λ₁+λ₂、行列式 = λ₁λ₂，两个便宜检查，算错立刻露馅。</li>
+      <li><b>认清四种情形</b>：两条不动线 / 一条 / 一条都没有 / 有一条被压成零。</li>
+      <li><b>用起来</b>：<span class="mono">Aᵏv = λᵏv</span>，于是「重复 k 次」只要一次乘法；这是幂迭代、马尔可夫链、PCA 的地基。</li>
+    </ol>
+    <span class="small">任何一级卡住，就退回上一级；每节开头都有一句「这一步在干什么」。</span>
+  </div>
+
+  <section>
+    <h2><span class="n">1</span>先看现象：反复作用，方向会自己稳定下来</h2>
+    <p class="big">拿第 2 课那个矩阵 <span class="math">A = [[2, 1], [1, 2]]</span>。它把 (x, y) 变成 (2x + y, x + 2y)。现在别只看一次，<b>把它反复作用在 (0, 1) 上</b>：</p>
+
+    <table>
+      <tr><th>作用次数 k</th><th>Aᵏ·(0, 1)</th><th>两个分量的比值 x / y</th></tr>
+      <tr><td>0</td><td>(0, 1)</td><td>0.000</td></tr>
+      <tr><td>1</td><td>(1, 2)</td><td>0.500</td></tr>
+      <tr><td>2</td><td>(4, 5)</td><td>0.800</td></tr>
+      <tr><td>3</td><td>(13, 14)</td><td>0.929</td></tr>
+      <tr><td>4</td><td>(40, 41)</td><td>0.976</td></tr>
+      <tr><td>5</td><td>(121, 122)</td><td>0.992</td></tr>
+      <tr><td>6</td><td>(364, 365)</td><td>0.997</td></tr>
+    </table>
+
+    <p>比值一路爬到 1。也就是说：<b>不管一开始朝哪，反复乘这个矩阵，方向都会滑向 45°</b>——也就是 (1, 1) 这条线。</p>
+    <p>可偏偏有两条线是例外。直接算：</p>
+    <div class="eq">A·(1, 1) = (2+1, 1+2) = (3, 3) = 3·(1, 1)</div>
+    <div class="eq">A·(1, −1) = (2−1, 1−2) = (1, −1) = 1·(1, −1)</div>
+    <p>(1, 1) 被拉长 3 倍，方向一点没动；(1, −1) 连长度都没变。其它方向（比如 (0, 1)）每次都被拧一下，只有这两条线「稳如老狗」。</p>
+    <p>这两个特殊方向，就是这一课的主角。</p>
+
+    <div class="def">
+      <span class="term">特征向量、特征值</span>如果矩阵 A 作用在非零向量 v 上，结果<b>只是 v 的一个倍数</b>：<span class="mono">A·v = λ·v</span>，那么 v 叫 A 的<b>特征向量</b>，那个倍数 λ 叫对应的<b>特征值</b>。
+      <span class="why">逐字读这句话：方向不变（还是同一个 v，不是 −v 以外的别的方向），长度乘 λ（λ = 3 就拉三倍，λ = 0.5 就压一半，λ = −1 就翻个面长度不变，λ = 0 就压成零点）。</span>
+      <span class="warn">两个坑：① v 必须是<b>非零</b>向量，零向量对任何矩阵都满足 Av = λv，没有信息量；② 特征向量有「长度不唯一」：v 和 5v 是同一个方向、都是特征向量，所以习惯上报<b>单位向量</b>（第 1 课的 â = v/|v|）。</span>
+    </div>
+
+    <div class="quote">
+      <b>一句话记住：</b>矩阵会拧几乎所有方向，但总有几条线它不敢动，只敢改长度。<br>这几条线描述了它「真正的性格」——其它一切，都是它们的组合。
+    </div>
+
+    <p>下面这张图可以自己动手：拖四个数改矩阵，拖角度改向量，看哪些线不动。</p>
+
+    <div class="fig">
+      <svg id="fig" viewBox="40 0 380 340" role="img" aria-label="特征值与特征向量的交互图">
+        <defs>
+          <clipPath id="clip"><rect x="40" y="0" width="380" height="340"/></clipPath>
+          <marker id="ah-a" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 z" fill="#a16207"/></marker>
+          <marker id="ah-b" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 z" fill="#1d4ed8"/></marker>
+          <marker id="ah-g" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 z" fill="#0d6f6a"/></marker>
+          <marker id="ah-r" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto"><path d="M0,0 L7,3.2 L0,6.4 z" fill="#9f1239"/></marker>
+        </defs>
+        <g id="scene" clip-path="url(#clip)"></g>
+      </svg>
+      <div class="readout">
+        <span class="pill" id="v1">λ₁ = 3.00</span>
+        <span class="pill" id="v2">λ₂ = 1.00</span>
+        <span class="pill ok" id="vreal">两个实特征值</span>
+      </div>
+      <div class="readout">
+        <span class="pill">tr = <b id="vtr">4.00</b></span>
+        <span class="pill">det = <b id="vdet">3.00</b></span>
+        <span class="pill" id="vang">p 与 A·p 夹角 = 0.0°</span>
+      </div>
+      <div class="ctrls">
+        <div class="row"><b>a</b><input id="sa" type="range" min="-2" max="2.5" step="0.1" value="2"><span class="v" id="va">2.0</span></div>
+        <div class="row"><b>b</b><input id="sb" type="range" min="-2" max="2" step="0.1" value="1"><span class="v" id="vb">1.0</span></div>
+        <div class="row"><b>c</b><input id="sc" type="range" min="-2" max="2" step="0.1" value="1"><span class="v" id="vc">1.0</span></div>
+        <div class="row"><b>d</b><input id="sd" type="range" min="-2" max="2.5" step="0.1" value="2"><span class="v" id="vd">2.0</span></div>
+        <div class="row"><b>θ</b><input id="st" type="range" min="0" max="180" step="1" value="30"><span class="v" id="vt">30°</span></div>
+      </div>
+      <div class="presets" id="presets">
+        <button data-m="2,1,1,2">对称 A（两个方向）</button>
+        <button data-m="0,-1,1,0">旋转 90°（没有方向）</button>
+        <button data-m="1,0.5,0,1">剪切（只剩一个方向）</button>
+        <button data-m="1,2,2,4">压成一条线</button>
+        <button data-t="45">把 p 转到 45°</button>
+      </div>
+      <div class="cap">蓝箭头是 p，青箭头是 A·p。两条橙色线是特征方向：拖 θ 让 p <b>落在橙色线上</b>，你会发现蓝青两支箭头重合——那就是 Av = λv。</div>
+    </div>
+
+    <p>图里还有一圈虚线：单位圆被 A 作用后变成一个椭圆（有时被压成线段）。<b>椭圆的两条半轴方向，恰好就是两个特征方向；半轴长度，恰好就是两个特征值的绝对值。</b>第 2 课的 det 就是这两个数的乘积 = 椭圆面积。这一条把「面积倍数」和「拉伸方向」缝在了一起。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span>怎么算出来：把「方向相同」写成方程</h2>
+    <p>要解的是 <span class="mono">A v = λ v</span>，可这里两个未知量（v 和 λ）缠在一起，还不知道从哪下手。习惯做法是<b>把所有东西挪到一边</b>：</p>
+    <div class="eq">A v − λ v = 0　⟹　(A − λI) v = 0</div>
+    <p>注意 λ v = λ·I·v，这才是能把 λ 塞进矩阵里的原因：<span class="mono">I</span> 是单位矩阵，<span class="mono">[[1,0],[0,1]]</span>，乘任何向量都不变。所以 <span class="mono">A − λI</span> 就是「A 的对角线各减一个 λ」。</p>
+
+    <div class="def">
+      <span class="term">特征方程</span>求 λ 的方程：<span class="mono">det(A − λI) = 0</span>。解出来的 λ 就是特征值；每个 λ 代回去解 <span class="mono">(A − λI)v = 0</span>，得到的非零解就是特征向量。
+      <span class="why">为什么是「行列式等于 0」：第 3 课说过，矩阵把某个非零向量压成零 ⟺ 行列式为 0。我们要的正是「存在非零 v 使 (A − λI)v = 0」，所以必须 det = 0。这不是新知识，是第 3 课的零空间在说话。</span>
+      <span class="warn">这个方程对 n×n 矩阵永远是一次 n 次方程（因为 det 展开里有 λⁿ），所以 n 维矩阵<b>一定有 n 个特征值</b>——只是有的重根、有的不是实数（下节就会见到）。</span>
+    </div>
+
+    <h3>拿 A = [[2, 1], [1, 2]] 实算一遍</h3>
+    <p>第一步，把对角线各减 λ：</p>
+    <div class="eq">A − λI = [[2 − λ, 1], [1, 2 − λ]]</div>
+    <p>第二步，2×2 行列式 = 主对角相乘 − 副对角相乘（第 2 课）：</p>
+    <div class="eq">det = (2 − λ)(2 − λ) − 1·1 = λ² − 4λ + 3</div>
+    <p>第三步，令它等于 0 并因式分解：<span class="mono">λ² − 4λ + 3 = (λ − 1)(λ − 3) = 0</span>，于是 <b>λ₁ = 3、λ₂ = 1</b>。</p>
+    <p>第四步，把每个 λ 代回去求方向。</p>
+    <table>
+      <tr><th>λ</th><th>A − λI</th><th>解 (A − λI)v = 0</th><th>特征向量</th></tr>
+      <tr><td>3</td><td>[[−1, 1], [1, −1]]</td><td>−x + y = 0，即 y = x</td><td>(1, 1)</td></tr>
+      <tr><td>1</td><td>[[1, 1], [1, 1]]</td><td>x + y = 0，即 y = −x</td><td>(1, −1)</td></tr>
+    </table>
+    <p>和 §1 直接乘出来的结果一致：λ = 3 对应 (1, 1)，λ = 1 对应 (1, −1)。<b>这条路虽然绕，但它适用于任何维数，而「试出来」只能靠运气。</b></p>
+
+    <div class="def">
+      <span class="term">迹（trace）</span>矩阵主对角线上那些数加起来：<span class="mono">tr(A) = a + d</span>（2×2），一般 <span class="mono">tr(A) = Σ aᵢᵢ</span>。
+      <span class="why">它的用处就藏在这课里：<b>tr(A) = 所有特征值之和</b>。代码是 <span class="mono">np.trace(A)</span>。</span>
+    </div>
+
+    <p>2×2 有两条白送的检查，算完必须对一下，能拦住绝大多数手算错误：</p>
+    <div class="eq">λ₁ + λ₂ = tr(A) = a + d　　　　λ₁ · λ₂ = det(A) = ad − bc</div>
+    <p>验一遍刚才的结果：3 + 1 = 4 = 2 + 2 ✓；3 × 1 = 3 = 2·2 − 1·1 ✓。两条都过，才敢往下走。</p>
+    <p>为什么这两条一定成立？因为特征方程 <span class="mono">λ² − (a+d)λ + (ad−bc) = 0</span> 的两个根，按韦达定理就是「和 = 一次项系数的相反数 = a+d」「积 = 常数项 = det」。<b>不是巧合，是同一个方程换个说法。</b></p>
+
+    <p>顺手记一个不用记的公式：把特征方程写成 <span class="mono">λ² − tr·λ + det = 0</span>，用求根公式就得到 2×2 的速算法：</p>
+    <div class="eq">λ = ( tr ± √(tr² − 4·det) ) / 2</div>
+    <p>根号里那个 <span class="mono">tr² − 4det</span> 叫判别式。它小于 0 时没有实根——下一节就专门说这件事。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span>四种情形：一个矩阵不一定有「两条不动线」</h2>
+    <p>初学者最容易记住「特征向量就是那两条线」，然后遇到旋转矩阵就全乱了。真实情况有四种，各有各的几何含义：</p>
+
+    <table>
+      <tr><th>情形</th><th>例子</th><th>特征值</th><th>几何上在说</th></tr>
+      <tr><td><b>两个不同的实特征值</b></td><td>[[2, 1], [1, 2]]</td><td>1 和 3</td><td>两条不动线，一条拉 3 倍、一条不动。最常见、最好用</td></tr>
+      <tr><td><b>重根，但只有一个方向</b></td><td>[[1, 0.5], [0, 1]]</td><td>1（重根）</td><td>剪切：只有 x 轴不动，其它方向全被推斜</td></tr>
+      <tr><td><b>没有实特征值</b></td><td>[[0, −1], [1, 0]]</td><td>±i（复数）</td><td>旋转 90°：每个方向都被转走，一条不动线都没有</td></tr>
+      <tr><td><b>有 0 特征值</b></td><td>[[1, 2], [2, 4]]</td><td>0 和 5</td><td>有个方向被压成零 → 矩阵不可逆，秩不足</td></tr>
+    </table>
+
+    <h3>情形二：剪切——耳朵听到 1 和 1，其实只有一条线</h3>
+    <p>C = [[1, 0.5], [0, 1]]，特征方程 <span class="mono">(1−λ)² = 0</span>，两根都是 1。代回 <span class="mono">(C − I)v = 0</span>：矩阵变成 [[0, 0.5], [0, 0]]，第二个方程是 <span class="mono">0.5·y = 0</span>，所以 y = 0，v 只能是 (1, 0) 这一个方向。</p>
+    <p>验证一下别的方向确实被推斜了：C·(0, 1) = (0.5, 1)，它和 (0, 1) 不平行。作用两次 → (1, 1)，三次 → (1.5, 1)。<b>只有横轴纹丝不动，竖线被越推越歪。</b>这就是剪切的样子。</p>
+    <p class="small">术语：这种「特征值重复但没有足够多的特征向量」的矩阵叫<b>不可对角化</b>。它不影响使用，只是「用特征向量拼出所有向量」这件事做不到。</p>
+
+    <h3>情形三：旋转——一个实特征值都没有，可这不是坏消息</h3>
+    <p>B = [[0, −1], [1, 0]] 的判别式：<span class="mono">tr = 0、det = 1</span>，所以 <span class="mono">λ = (0 ± √(0 − 4))/2 = ±i</span>。没有实数解。</p>
+    <p>几何上一目了然：这是把平面转 90°。<b>转 90° 之后，哪个方向还能和自己平行？一个都没有。</b>（转 180° 就有：每个方向都变成反方向，λ = −1。）</p>
+    <p>复数特征值不是「算不下去了」，它表示<b>旋转</b>：实部管缩放、虚部管转角。B⁴ = I（转四次回到原样），这也和 λ⁴ = i⁴ = 1 对得上。</p>
+
+    <h3>情形四：有 0 特征值——这就是第 3 课的「压扁」</h3>
+    <p>D = [[1, 2], [2, 4]]，tr = 5、det = 0，所以 λ = 0 和 5。代回去：</p>
+    <table>
+      <tr><th>λ</th><th>方向</th><th>验证</th></tr>
+      <tr><td>5</td><td>(1, 2)</td><td>D·(1, 2) = (1+4, 2+8) = (5, 10) = 5·(1, 2) ✓</td></tr>
+      <tr><td>0</td><td>(2, −1)</td><td>D·(2, −1) = (2−2, 4−4) = (0, 0) = 0·(2, −1) ✓</td></tr>
+    </table>
+    <p>λ = 0 意味着<b>这个方向上的向量被彻底压没了</b>——它不是「不变」，是「消失」。(2, −1) 这个方向正好是第 3 课那个零空间方向：整个平面被压到 (1, 2) 这一条线上。</p>
+    <div class="quote">
+      <b>串起来看：</b>det = 0 ⟺ 至少有一个特征值是 0 ⟺ 存在被压成零的方向 ⟺ 不可逆。<br>第 2 课的行列式、第 3 课的秩与零空间、这一课的特征值，说的是同一件事的三种语言。
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">4</span>为什么要学：把「重复 k 次」变成「乘一个数」</h2>
+    <p>特征值最大的用处只有一个，但它值回全部票价。<b>如果 v 是特征向量，那么</b>：</p>
+    <div class="eq">A²v = A(Av) = A(λv) = λ(Av) = λ²v　　⟹　　一般地　Aᵏv = λᵏv</div>
+    <p>「乘 k 次矩阵」变成了「乘 k 次一个数」。而任意向量都能写成特征向量的组合，于是整件事就通了。</p>
+
+    <h3>用这个解释 §1 的收敛</h3>
+    <p>把 (0, 1) 拆成两个特征向量的组合（解一个 2×2 就行）：</p>
+    <div class="eq">(0, 1) = 0.5·(1, 1) − 0.5·(1, −1)</div>
+    <p>两边同时乘 Aᵏ，利用 Aᵏ(1,1) = 3ᵏ(1,1)、Aᵏ(1,−1) = 1ᵏ(1,−1)：</p>
+    <div class="eq">Aᵏ(0, 1) = 0.5·3ᵏ·(1, 1) − 0.5·(1, −1) = ( (3ᵏ − 1)/2 , (3ᵏ + 1)/2 )</div>
+    <p>代入 k = 1、2、3 得到 (1, 2)、(4, 5)、(13, 14)——和 §1 那张表一模一样。<b>当 k 变大，3ᵏ 那一项压倒一切，第二个分量差的那个 1 越来越不重要，所以方向趋于 (1, 1)。</b></p>
+    <p class="small">k = 6 时两个分量是 364 和 365，比值 0.997——这就是「收敛」，不是巧合，是被 3ᵏ 挤掉的。</p>
+
+    <div class="def">
+      <span class="term">主导特征值</span>绝对值最大的那个特征值。它决定了「反复作用很多次以后，矩阵实际在干什么」——其它方向都会被它盖过去。
+      <span class="why">这就是幂迭代（power iteration）的原理：随便取一个向量，反复乘 A，方向就会收敛到主导特征向量。Google 的 PageRank 本质上就是这一招用在网页链接矩阵上。</span>
+      <span class="warn">两个特征值绝对值相等时（比如旋转、或者 3 和 −3），就不会收敛到某个方向，而是来回摆或打转。</span>
+    </div>
+
+    <p>还有两件常见的事，都建立在这上面：</p>
+    <table>
+      <tr><th>场景</th><th>特征值在说什么</th></tr>
+      <tr><td>马尔可夫链、状态转移</td><td>λ = 1 那个特征向量就是「长期稳定分布」，反复转移后所有状态都趋向它</td></tr>
+      <tr><td>振动、差分方程、系统稳定性</td><td>|λ| &lt; 1 → 扰动衰减；|λ| &gt; 1 → 发散；复数 λ → 振荡</td></tr>
+      <tr><td>数据降维（下一课 PCA）</td><td>协方差矩阵的特征向量 = 数据「最值钱」的方向，特征值 = 那个方向上的方差</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="n">5</span>工具表：numpy 里就三行</h2>
+    <table>
+      <tr><th>要什么</th><th>写法</th><th>说明</th></tr>
+      <tr><td>特征值 + 特征向量</td><td><span class="mono">w, V = np.linalg.eig(A)</span></td><td>w 是特征值（可能是复数），V 的<b>每一列</b>是对应特征向量，已归一化</td></tr>
+      <tr><td>对称矩阵专用</td><td><span class="mono">w, V = np.linalg.eigh(A)</span></td><td>只对对称矩阵用；特征值<b>升序</b>、向量正交且为实数，更快更稳。PCA 里必须用它</td></tr>
+      <tr><td>只要特征值</td><td><span class="mono">np.linalg.eigvals(A)</span></td><td>省一半计算</td></tr>
+      <tr><td>反复作用 k 次</td><td><span class="mono">np.linalg.matrix_power(A, k)</span></td><td>比写循环快得多</td></tr>
+      <tr><td>验证算对了没</td><td><span class="mono">A @ V[:, i] - w[i] * V[:, i]</span></td><td>应该是一个全零（或 ≈1e−15）的向量</td></tr>
+    </table>
+    <div class="def">
+      <span class="term">特征分解</span>如果 A 有 n 个线性无关的特征向量，把它们按列拼成 P、特征值摆在对角线上成 Λ，就有 <span class="mono">A = P Λ P⁻¹</span>。
+      <span class="why">读法：先换到「特征向量坐标系」（P⁻¹），在那里矩阵只是「各自乘一个数」（Λ），再换回来（P）。所以 <span class="mono">Aᵏ = P Λᵏ P⁻¹</span>——这就是「k 次方只改对角线」的来源。</span>
+      <span class="warn">不是所有矩阵都能这么拆（剪切那种就不行）；对称矩阵一定可以，而且 P 是正交矩阵、P⁻¹ = Pᵀ——这条在 PCA 里会直接用上。</span>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">6</span>能跑的代码：把这一课全算一遍</h2>
+    <pre><span class="c"># 1) 手算过的那个矩阵：λ = 3 和 1，向量 (1,1)/√2 与 (1,-1)/√2</span>
+<span class="k">import</span> numpy <span class="k">as</span> np
+A = np.array([[<span class="s">2.</span>, <span class="s">1.</span>], [<span class="s">1.</span>, <span class="s">2.</span>]])
+w, V = np.linalg.eigh(A)          <span class="c"># 对称矩阵，用 eigh（升序）</span>
+<span class="k">print</span>(w)                        <span class="c"># [1. 3.]</span>
+<span class="k">print</span>(V)                        <span class="c"># 每列一个方向</span>
+
+<span class="c"># 2) 验证 Av = λv（对每一列）</span>
+<span class="k">for</span> i <span class="k">in</span> <span class="k">range</span>(<span class="s">2</span>):
+    <span class="k">print</span>(np.allclose(A @ V[:, i], w[i] * V[:, i]))   <span class="c"># True</span>
+
+<span class="c"># 3) 两个便宜检查</span>
+<span class="k">print</span>(np.isclose(w.sum(), np.trace(A)))              <span class="c"># True（迹 = 特征值和）</span>
+<span class="k">print</span>(np.isclose(np.prod(w), np.linalg.det(A)))      <span class="c"># True（det = 特征值积）</span>
+
+<span class="c"># 4) 反复作用：方向会滑向 (1,1)</span>
+p = np.array([<span class="s">0.</span>, <span class="s">1.</span>])
+<span class="k">for</span> k <span class="k">in</span> <span class="k">range</span>(<span class="s">1</span>, <span class="s">7</span>):
+    q = np.linalg.matrix_power(A, k) @ p
+    <span class="k">print</span>(k, q, q[<span class="s">0</span>] / q[<span class="s">1</span>])
+
+<span class="c"># 5) 手算 2x2 的公式：λ = (tr ± √(tr²-4det)) / 2</span>
+tr, det = np.trace(A), np.linalg.det(A)
+d = np.sqrt(tr**<span class="s">2</span> - <span class="s">4</span> * det)
+<span class="k">print</span>((tr + d) / <span class="s">2</span>, (tr - d) / <span class="s">2</span>)          <span class="c"># 3.0 1.0</span>
+
+<span class="c"># 6) 旋转矩阵：没有实特征值</span>
+B = np.array([[<span class="s">0.</span>, <span class="s">-1.</span>], [<span class="s">1.</span>, <span class="s">0.</span>]])
+<span class="k">print</span>(np.linalg.eigvals(B))       <span class="c"># [0.+1.j 0.-1.j]</span></pre>
+    <p class="small">第 6 段输出带 <span class="mono">j</span>，那就是虚数单位。判断「有没有实特征值」：看 <span class="mono">np.iscomplexobj(w)</span>，或者直接看判别式 <span class="mono">tr² − 4det &lt; 0</span>。</p>
+  </section>
+
+  <section>
+    <h2><span class="n">7</span>练习：六道，做完对答案</h2>
+    <p class="small">题型：① 手算 ② 手算 ③ 判断四种情形 ④ 应用到幂次 ⑤ 找错 ⑥ 写代码。想跳过哪道都行，但 ③ 和 ⑤ 最容易暴露理解漏洞。</p>
+
+    <div class="ex">
+      <b>1.</b> A = [[3, 1], [0, 2]]。用特征方程求两个特征值，并写出对应的特征向量（不用单位向量）。
+      <details><summary>看答案</summary>
+        <p>特征方程：<span class="mono">(3−λ)(2−λ) − 0 = 0</span> → λ = 3 和 λ = 2（上三角矩阵的特征值就是对角线）。</p>
+        <p>λ = 3：A − 3I = [[0, 1], [0, −1]]，即 y = 0，向量 (1, 0)。λ = 2：A − 2I = [[1, 1], [0, 0]]，即 x + y = 0，向量 (1, −1)。</p>
+        <p>验算：tr = 5 = 3 + 2 ✓；det = 6 = 3 × 2 ✓。</p>
+      </details>
+    </div>
+
+    <div class="ex">
+      <b>2.</b> 不写特征方程，只用 tr 和 det 求 A = [[1, 2], [2, 4]] 的特征值。
+      <details><summary>看答案</summary>
+        <p>tr = 5，det = 1·4 − 2·2 = 0。解 <span class="mono">λ² − 5λ + 0 = 0</span> → λ = 0 和 5。</p>
+        <p>λ = 0 说明有个方向被压成零：解 (A − 0I)v = 0 得 (2, −1)。λ = 5 对应 (1, 2)。这也解释了 det = 0（第 2 课）和秩 1（第 3 课）。</p>
+      </details>
+    </div>
+
+    <div class="ex">
+      <b>3.</b> 下面四个矩阵各属于哪种情形（两个实根 / 重根但一个方向 / 无实根 / 有零根）？<br><span class="mono">[[0,−1],[1,0]]、[[1,0.5],[0,1]]、[[2,1],[1,2]]、[[1,2],[2,4]]</span>
+      <details><summary>看答案</summary>
+        <p>依次：<b>无实根</b>（λ = ±i，旋转 90°）、<b>重根但一个方向</b>（λ = 1, 1，剪切）、<b>两个实根</b>（1 和 3，两条正交的不动线）、<b>有零根</b>（0 和 5，被压成一条线）。</p>
+        <p>判别式依次是 −4、0、4、25。</p>
+      </details>
+    </div>
+
+    <div class="ex">
+      <b>4.</b> 用 §4 的分解式，求 A = [[2, 1], [1, 2]] 作用五次后 A⁵·(1, 0) 是多少。
+      <details><summary>看答案</summary>
+        <p>先把 (1, 0) 拆开：(1, 0) = 0.5(1, 1) + 0.5(1, −1)。于是</p>
+        <p><span class="mono">A⁵(1,0) = 0.5·3⁵·(1,1) + 0.5·1⁵·(1,−1) = 0.5·243·(1,1) + 0.5·(1,−1) = (121.5+0.5, 121.5−0.5) = (122, 121)</span></p>
+        <p>用代码核：<span class="mono">np.linalg.matrix_power(A, 5)</span> = [[122, 121], [121, 122]]，第一列正是 (122, 121) ✓。</p>
+      </details>
+    </div>
+
+    <div class="ex">
+      <b>5.</b> 有同学说：「det = 0 就说明两个特征值都是 0。」这句话哪里错？给一个反例。
+      <details><summary>看答案</summary>
+        <p>错在「都」。det = 0 只说明<b>至少有一个</b>特征值是 0（因为 λ₁λ₂ = det）。另一个可以是任何数。</p>
+        <p>反例就是练习 2 的 [[1, 2], [2, 4]]：det = 0，但特征值是 0 和 <b>5</b>。它把平面压成一条线，那条线上仍然被拉长 5 倍。</p>
+        <p>真正「两个都是 0」的矩阵比如 [[0, 1], [0, 0]]（它把一切都压成零，而且连一条完整的不动线都数不出来）。</p>
+      </details>
+    </div>
+
+    <div class="ex">
+      <b>6.</b> 写代码：对 A = [[2, 1], [1, 2]] 验证 <span class="mono">Aᵏ(0,1)</span> 的方向收敛到 (1, 1)，并打印到 k = 10 时两个分量的比值。
+      <details><summary>看答案</summary>
+<pre><span class="k">import</span> numpy <span class="k">as</span> np
+A = np.array([[<span class="s">2.</span>, <span class="s">1.</span>], [<span class="s">1.</span>, <span class="s">2.</span>]])
+p = np.array([<span class="s">0.</span>, <span class="s">1.</span>])
+<span class="k">for</span> k <span class="k">in</span> [<span class="s">1</span>, <span class="s">5</span>, <span class="s">10</span>]:
+    q = np.linalg.matrix_power(A, k) @ p
+    <span class="k">print</span>(k, q[<span class="s">0</span>] / q[<span class="s">1</span>])     <span class="c"># 0.5, 0.99180..., ~1.0</span></pre>
+        <p>也可以顺便验证结论：方向偏差以 (1/3)ᵏ 的速度缩小——因为另一支是 1ᵏ、主轴是 3ᵏ，比值就是 (1/3)ᵏ。</p>
+      </details>
+    </div>
+  </section>
+
+  <div class="next">
+    <b>明天的问题：</b>特征值听起来很抽象，可它有一个非常赚钱的用法——<b>给一堆数据找一个「最值钱的方向」</b>。如果数据的协方差矩阵正好是个对称矩阵，它的特征向量就是那个方向、特征值就是这个方向上的「信息量」。这就是下一课的主成分分析：把 12 个数压成 6 个数，还几乎不损失信息。
+  </div>
+
+  <section>
+    <h2><span class="n">8</span>收尾：四个问题，答上来就算学会</h2>
+    <div class="ex">
+      <b>① 用自己的话说：什么叫特征向量？</b>
+      <details><summary>看答案</summary>矩阵作用上去，方向不变的那个向量（零向量不算）。它只被拉长、压短或翻面，倍数就是特征值。<b>检验方式：Av 与 v 平行。</b></details>
+    </div>
+    <div class="ex">
+      <b>② 为什么求特征值要解 det(A − λI) = 0？</b>
+      <details><summary>看答案</summary>因为 (A − λI)v = 0 要有非零解，而这个矩阵必须把某个非零向量压成零——第 3 课说过，那等价于它的行列式为 0。<b>所以这是在用「行列式为零」找 λ。</b></details>
+    </div>
+    <div class="ex">
+      <b>③ 一个 2×2 矩阵一定有两个实特征值吗？</b>
+      <details><summary>看答案</summary>不一定。一定有<b>两个特征值（计重数）</b>，但可能不是实数（旋转），也可能重复（剪切）。判别式 tr² − 4det 小于 0 就没有实根。</details>
+    </div>
+    <div class="ex">
+      <b>④ 特征值跟我们前面学的行列式、秩是什么关系？</b>
+      <details><summary>看答案</summary>同一件事的三种说法：det = λ₁λ₂（2×2），所以「det = 0」⟺「有零特征值」⟺「有方向被压成零」⟺「秩不足、不可逆」。tr = λ₁+λ₂ 则是另一个免费的检查。</details>
+    </div>
+  </section>
+
+  <div class="pager">
+    <a href="lesson-04.html">← 第 4 课：最小二乘与投影</a>
+    <a href="index.html">回路线图</a>
+    <a href="lesson-06.html">第 6 课：主成分分析 PCA →</a>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var NS='http://www.w3.org/2000/svg';
+  var S=38, OX=210, OY=170;
+  var scene=document.getElementById('scene');
+  function $(id){return document.getElementById(id);}
+  function mk(tag,attrs){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);return e;}
+  function X(v){return OX+S*v;}
+  function Y(v){return OY-S*v;}
+  function clear(){while(scene.firstChild)scene.removeChild(scene.firstChild);}
+  function line(x1,y1,x2,y2,color,w,dash){
+    var a={'x1':X(x1),'y1':Y(y1),'x2':X(x2),'y2':Y(y2),'stroke':color,'stroke-width':w||1.5};
+    if(dash)a['stroke-dasharray']=dash;
+    scene.appendChild(mk('line',a));
+  }
+  function arrow(x1,y1,x2,y2,color,marker){
+    scene.appendChild(mk('line',{'x1':X(x1),'y1':Y(y1),'x2':X(x2),'y2':Y(y2),'stroke':color,'stroke-width':2.4,'marker-end':'url(#'+marker+')'}));
+  }
+  function dot(x,y,color,r){scene.appendChild(mk('circle',{'cx':X(x),'cy':Y(y),'r':r||5,'fill':color}));}
+  function label(x,y,txt,color,size){
+    var t=mk('text',{'x':X(x),'y':Y(y),'fill':color||'#3c4a5e','font-size':size||12,'font-family':'JetBrains Mono, monospace'});
+    t.textContent=txt;scene.appendChild(t);
+  }
+  function grid(){
+    for(var i=-4;i<=5;i++){
+      if(i===0)continue;
+      line(i,-4,i,4,'#eae5d8',1);
+      line(-4,i,5,i,'#eae5d8',1);
+    }
+    line(-4,0,5,0,'#8e9aad',1.4);
+    line(0,-4,0,4,'#8e9aad',1.4);
+    label(4.7,-0.42,'x','#8e9aad',12);
+    label(-0.75,3.8,'y','#8e9aad',12);
+  }
+
+  function params(){
+    return {
+      a:parseFloat($('sa').value), b:parseFloat($('sb').value),
+      c:parseFloat($('sc').value), d:parseFloat($('sd').value),
+      th:parseFloat($('st').value)*Math.PI/180
+    };
+  }
+
+  function eig(p){
+    var tr=p.a+p.d, det=p.a*p.d-p.b*p.c;
+    var disc=tr*tr/4-det;
+    if(disc<0) return {real:false,tr:tr,det:det,disc:disc};
+    var s=Math.sqrt(disc);
+    return {real:true,l1:tr/2+s,l2:tr/2-s,tr:tr,det:det,disc:disc};
+  }
+
+  function evec(l,p){
+    var vx=l-p.d, vy=p.c;
+    if(Math.abs(vx)<1e-9 && Math.abs(vy)<1e-9){vx=p.b;vy=l-p.a;}
+    var n=Math.sqrt(vx*vx+vy*vy)||1;
+    return [vx/n,vy/n];
+  }
+
+  function render(){
+    clear(); grid();
+    var p=params(), e=eig(p);
+
+    // 单位圆 -> 椭圆
+    var pts=[];
+    for(var i=0;i<=72;i++){
+      var t=i/72*2*Math.PI, cx=Math.cos(t), sy=Math.sin(t);
+      pts.push(X(p.a*cx+p.b*sy)+' '+Y(p.c*cx+p.d*sy));
+    }
+    scene.appendChild(mk('polyline',{'points':pts.join(' '),'fill':'none','stroke':'#b3bfd2','stroke-width':1.6,'stroke-dasharray':'5 4'}));
+
+    // 特征方向
+    if(e.real){
+      var v1=evec(e.l1,p), v2=evec(e.l2,p);
+      var L=4.2;
+      line(-L*v1[0],-L*v1[1],L*v1[0],L*v1[1],'#f0c98a',6);
+      line(-L*v2[0],-L*v2[1],L*v2[0],L*v2[1],'#f0c98a',6);
+      arrow(0,0,e.l1*v1[0],e.l1*v1[1],'#a16207','ah-a');
+      arrow(0,0,e.l2*v2[0],e.l2*v2[1],'#c2872a','ah-a');
+      label(e.l1*v1[0]*1.08+0.15,e.l1*v1[1]*1.08+0.15,'λ₁v₁','#a16207',11);
+    }
+
+    // p 与 A·p
+    var px=Math.cos(p.th), py=Math.sin(p.th);
+    var qx=p.a*px+p.b*py, qy=p.c*px+p.d*py;
+    arrow(0,0,px,py,'#1d4ed8','ah-b');
+    arrow(0,0,qx,qy,'#0d6f6a','ah-g');
+    dot(px,py,'#1d4ed8',4.5);
+    dot(qx,qy,'#0d6f6a',4.5);
+    label(px*1.12,py*1.12+0.12,'p','#1d4ed8',13);
+    label(qx*1.06,qy*1.06-0.2,'A·p','#0d6f6a',13);
+
+    // 读数
+    if(e.real){
+      $('v1').textContent='λ₁ = '+e.l1.toFixed(2);
+      $('v2').textContent='λ₂ = '+e.l2.toFixed(2);
+      $('vreal').textContent='两个实特征值';
+      $('vreal').className='pill ok';
+    }else{
+      $('v1').textContent='λ = '+e.tr.toFixed(2)+'/2 ± i·'+Math.sqrt(-e.disc).toFixed(2);
+      $('v2').textContent='λ₂ = 共轭';
+      $('vreal').textContent='没有实特征方向';
+      $('vreal').className='pill warn';
+    }
+    $('vtr').textContent=e.tr.toFixed(2);
+    $('vdet').textContent=e.det.toFixed(2);
+    var dotv=px*qx+py*qy, np1=Math.sqrt(qx*qx+qy*qy);
+    var cosA=dotv/(np1||1);
+    cosA=Math.max(-1,Math.min(1,cosA));
+    var ang=Math.acos(cosA)*180/Math.PI;
+    var el=$('vang');
+    el.textContent='p 与 A·p 夹角 = '+ang.toFixed(1)+'°';
+    el.className='pill '+(ang<1?'ok':'');
+  }
+
+  ['sa','sb','sc','sd','st'].forEach(function(id){
+    $(id).addEventListener('input',function(){
+      $('v'+id.slice(1)).textContent=id==='st'?($(id).value+'°'):parseFloat($(id).value).toFixed(1);
+      render();
+    });
+  });
+
+  $('presets').addEventListener('click',function(ev){
+    var b=ev.target; if(!b.dataset)return;
+    if(b.dataset.m){
+      var v=b.dataset.m.split(',');
+      ['sa','sb','sc','sd'].forEach(function(id,i){
+        $(id).value=parseFloat(v[i]);
+        $('v'+id.slice(1)).textContent=parseFloat(v[i]).toFixed(1);
+      });
+    }
+    if(b.dataset.t){
+      $('st').value=parseFloat(b.dataset.t);
+      $('vt').textContent=b.dataset.t+'°';
+    }
+    render();
+  });
+
+  var q=new URLSearchParams(location.search);
+  if(q.get('m')){
+    var mv=q.get('m').split(',');
+    ['sa','sb','sc','sd'].forEach(function(id,i){
+      $(id).value=parseFloat(mv[i]);
+      $('v'+id.slice(1)).textContent=parseFloat(mv[i]).toFixed(1);
+    });
+  }
+  if(q.get('t')){$('st').value=q.get('t');$('vt').textContent=q.get('t')+'°';}
+  render();
+  window.__eig=eig; window.__evec=evec; window.__params=params;
+})();
+</script>
+</body>
+</html>
